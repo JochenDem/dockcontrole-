@@ -291,14 +291,19 @@ select.st{width:100%;min-width:220px;padding:4px 8px;border:1px solid var(--line
 select.st:focus{background:var(--surface);border-color:var(--accent)}
 tr.grp td{background:var(--accent);color:var(--accent-ink);padding:10px 12px;border-bottom:1px solid var(--line)}
 tr.grp b{font-family:var(--font-display);font-size:1.5rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;line-height:1.1}
-tr.sub td{text-align:center;background:var(--sub-bg);padding:3px 12px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);font-weight:600;line-height:1.15}
+#out tr.weg{display:none}
+button.vouw{display:inline-flex;align-items:center;gap:10px;background:none;border:0;padding:2px 6px;margin:0;font:inherit;color:inherit;text-transform:inherit;letter-spacing:inherit;cursor:pointer;border-radius:4px}
+button.vouw:hover{background:color-mix(in srgb,#fff 22%,transparent);color:inherit}
+.pijl{width:0;height:0;border-left:7px solid currentColor;border-top:5px solid transparent;border-bottom:5px solid transparent;transform:rotate(90deg);transition:transform .12s}
+tr.sub.toe .pijl{transform:rotate(0deg)}
+tr.sub td{text-align:center;background:var(--accent);padding:5px 12px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-size:1.25rem;text-transform:uppercase;letter-spacing:.05em;color:var(--accent-ink);font-weight:700;line-height:1.15}
 td.pcell{padding-block:6px}
 .palrow{display:flex;gap:8px;flex-wrap:wrap}
 .palrow label{display:flex;flex-direction:column;gap:2px}
 .palrow .pd{font-size:.66rem;line-height:1.1;color:var(--muted);white-space:nowrap}
 .pin{width:4.4rem;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font-family:var(--font-mono);font-size:.95rem;text-align:center}
 .pin:focus{background:var(--surface);border-color:var(--accent)}
-tr.sub .gc{margin-left:12px;font-family:var(--font-mono);font-size:.78rem;letter-spacing:0;text-transform:none;color:inherit;opacity:.75;font-weight:400}
+tr.sub .gc{margin-left:12px;background:var(--chip-bg);color:var(--chip-ink);padding:1px 8px;border-radius:3px;font-family:var(--font-mono);font-size:.72rem;letter-spacing:0;text-transform:none;font-weight:600}
 tr.grp .gc{margin-left:14px;background:var(--chip-bg);color:var(--chip-ink);padding:1px 8px;border-radius:3px;font-family:var(--font-mono);font-size:.72rem;font-weight:600;vertical-align:.25em}
 th.r,td.r{text-align:right;font-family:var(--font-mono)}
 th.r{font-family:var(--font-body)}
@@ -591,6 +596,24 @@ async function sbRest(path,opt){
     if(!c||!c.d) return '–';
     return c.d.slice(0,5)+' '+(c.t||'');
   }
+  /* Welke blokken dichtgeklapt staan; blijft bewaard in deze browser. */
+  var VKEY='dockcontrole-vouw',toe={};
+  try{toe=JSON.parse(localStorage.getItem(VKEY)||'{}')||{}}catch(e){toe={}}
+  function toeIs(sec){return !!(sec&&toe[sec])}
+  function vouw(sec){
+    if(!sec) return;
+    toe[sec]=!toe[sec];
+    try{localStorage.setItem(VKEY,JSON.stringify(toe))}catch(e){}
+    out.querySelectorAll('tr[data-sec="'+sec+'"]').forEach(function(tr){
+      if(tr.classList.contains('sub')){
+        tr.classList.toggle('toe',toe[sec]);
+        var b=tr.querySelector('.vouw');
+        if(b) b.setAttribute('aria-expanded',toe[sec]?'false':'true');
+      }else{
+        tr.classList.toggle('weg',toe[sec]);
+      }
+    });
+  }
   /* De gegevens komen uit de tabel dock_routes; ROW is de rij van de geopende TU. */
   var ROW=null;
   function parse(){
@@ -671,32 +694,37 @@ async function sbRest(path,opt){
     /* Stukgoed (B- en P-types) krijgt een eigen kop en staat bovenaan. */
     var volgorde;
     if(bytime){
-      volgorde=lijst.slice();
+      volgorde=lijst.map(function(hu){return {hu:hu,sec:''}});
     }else{
       var stuk=lijst.filter(isPiece),rest=lijst.filter(function(hu){return !isPiece(hu)});
       volgorde=[];
-      if(stuk.length){volgorde.push({sub:stuk.length,title:'Stukgoed'});stuk.forEach(function(hu){volgorde.push(hu)})}
+      if(stuk.length){volgorde.push({sub:stuk.length,title:'Stukgoed',sec:'stuk'});stuk.forEach(function(hu){volgorde.push({hu:hu,sec:'stuk'})})}
       if(rest.length){
-        if(stuk.length) volgorde.push({sub:rest.length,title:'Stillages'});
-        rest.forEach(function(hu){volgorde.push(hu)});
+        if(stuk.length) volgorde.push({sub:rest.length,title:'Stillages',sec:'rest'});
+        rest.forEach(function(hu){volgorde.push({hu:hu,sec:stuk.length?'rest':''})});
       }
     }
     var n=0;
-    volgorde.forEach(function(hu){
-      if(typeof hu==='object'){
-        h+='<tr class="sub"><td colspan="'+(cs+2)+'">'+esc(hu.title)+'<span class="gc">'+hu.sub+' HU\'s</span></td></tr>';
+    volgorde.forEach(function(item){
+      if(item.title){
+        var dicht=toeIs(item.sec);
+        h+='<tr class="sub'+(dicht?' toe':'')+'" data-sec="'+esc(item.sec)+'">'
+          +'<td colspan="'+(cs+2)+'"><button type="button" class="vouw" aria-expanded="'+(dicht?'false':'true')
+          +'" aria-label="'+esc(item.title)+' open- of dichtklappen"><span class="pijl"></span>'+esc(item.title)
+          +'<span class="gc">'+item.sub+' HU\'s</span></button></td></tr>';
         return;
       }
+      var hu=item.hu,sec=item.sec;
       n++;
       var end=hu.length-skip,start=end-take;
       var klant=p.customers[hu]||'Geen klant';
       if(start<0){
-        h+='<tr class="bad" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td><td colspan="'+(cs-2)+'">Te kort voor de regel hierboven</td><td class="hu">'+esc(hu)+'</td><td class="c" colspan="2"></td></tr>';
+        h+='<tr class="bad'+(toeIs(sec)?' weg':'')+'" data-sec="'+esc(sec)+'" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td><td colspan="'+(cs-2)+'">Te kort voor de regel hierboven</td><td class="hu">'+esc(hu)+'</td><td class="c" colspan="2"></td></tr>';
         return;
       }
       var code=hu.slice(start,end),s=state[hu]||{};
       codes.push(code);
-      h+='<tr data-hu="'+esc(hu)+'" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td>'
+      h+='<tr'+(toeIs(sec)?' class="weg"':'')+' data-hu="'+esc(hu)+'" data-sec="'+esc(sec)+'" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td>'
         +'<td class="ty">'+typeSelect(code,effType(hu),p.types[hu]||'')+'</td>'
         +'<td class="u" title="'+esc(p.users[hu]||'')+'">'+esc(userName(p.users[hu]))+'</td>'
         +(bytime?'<td class="chg">'+esc(chgText(p.changed[hu]))+'</td>':'')
@@ -716,6 +744,10 @@ async function sbRest(path,opt){
 
   out.addEventListener('input',onField);
   out.addEventListener('change',onField);
+  out.addEventListener('click',function(e){
+    var b=e.target.closest('.vouw');
+    if(b) vouw(b.closest('tr').getAttribute('data-sec'));
+  });
   copyBtn.addEventListener('click',function(){
     var txt=codes.join('\n');
     function done(){var o=copyBtn.textContent;copyBtn.textContent='Gekopieerd';setTimeout(function(){copyBtn.textContent=o},1400)}
