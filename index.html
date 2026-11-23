@@ -155,7 +155,7 @@ button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
   #out td.c::before{content:attr(data-l);display:block;font-size:.62rem;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
   #out td.c input{width:30px;height:30px}
   #out td.pcell{grid-column:1/-1;grid-row:4}
-  #out .palrow{gap:8px}
+  #out .palrow{gap:8px;flex-wrap:wrap}
   #out .palrow label{flex:1 1 44%}
   #out .pin{width:100%}
   #out tr.grp{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 10px;background:var(--accent)}
@@ -189,6 +189,9 @@ button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
   .sbinfo{text-align:left}
   .syncbar{flex-wrap:wrap;gap:8px}
 }
+.okl{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase}
+.okl input{width:18px;height:18px}
+td.c.ok{text-align:center}
 /* Lijst met klaargezette routes. */
 #routes td.code2{font-family:var(--font-mono);font-weight:600;font-size:1.05rem}
 #routes tr.open td{background:var(--accent-soft)}
@@ -274,6 +277,11 @@ mark{background:var(--mark);color:var(--mark-ink);padding:1px 2px;border-radius:
 td.hu .code{display:inline-block;background:var(--label-bg);color:var(--label-fg);font-family:Verdana,"DejaVu Sans",Geneva,sans-serif;font-weight:700;font-size:1rem;line-height:1.4;letter-spacing:.1em;padding:1px 10px 1px 12px;border-radius:2px;box-shadow:0 0 0 1px var(--line);font-variant-numeric:tabular-nums}
 td.hu .code{font-size:1.15rem;letter-spacing:.12em}
 td.hu small{font-size:.72rem;color:var(--muted)}
+td.hu{white-space:normal;max-width:260px}
+td.pcell .palrow{gap:6px}
+td.pcell label{min-width:0}
+td.pcell .pd{font-size:.6rem}
+td.pcell .pin{width:3.2rem}
 td.hu small.kl{display:inline-block;margin-top:2px;font-family:var(--font-body);font-weight:600;color:var(--ink);letter-spacing:0}
 td.hu small.vol{display:inline}
 td.hu small.vol::before{content:' · ';color:var(--muted)}
@@ -285,7 +293,7 @@ tr.grp td{background:var(--accent);color:var(--accent-ink);padding:10px 12px;bor
 tr.grp b{font-family:var(--font-display);font-size:1.5rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;line-height:1.1}
 tr.sub td{text-align:center;background:var(--sub-bg);padding:3px 12px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);font-weight:600;line-height:1.15}
 td.pcell{padding-block:6px}
-.palrow{display:flex;gap:8px;flex-wrap:nowrap}
+.palrow{display:flex;gap:8px;flex-wrap:wrap}
 .palrow label{display:flex;flex-direction:column;gap:2px}
 .palrow .pd{font-size:.66rem;line-height:1.1;color:var(--muted);white-space:nowrap}
 .pin{width:4.4rem;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font-family:var(--font-mono);font-size:.95rem;text-align:center}
@@ -497,7 +505,7 @@ async function sbRest(path,opt){
   function resetVelden(){
     state={};
     try{localStorage.removeItem(SKEY)}catch(e){}
-    out.querySelectorAll('input.f6,input.f65').forEach(function(i){i.checked=false});
+    out.querySelectorAll('input.f6,input.f65,input.fok').forEach(function(i){i.checked=false});
     out.querySelectorAll('input.pin').forEach(function(i){i.value=''});
     out.querySelectorAll('select.st').forEach(function(sel){sel.value=sel.getAttribute('data-def')||''});
     updateCounts();
@@ -505,13 +513,14 @@ async function sbRest(path,opt){
   /* Stukgoed-HU's krijgen invulvelden in de plaats van de vakjes 6m en 6.5m. */
   var PALF=[['pe','Europalet','80×120'],['pb','Blokpalet','120×120'],['pg','Gasket','80×80'],['pd','Dozen','']];
   function lastCells(hu,code,s,kind){
-    if(kind==='loose') return '<td class="c" colspan="2"></td>';
+    if(kind==='loose') return '<td class="c ok" colspan="2" data-l="gezien"><label class="okl"><input class="fok" type="checkbox" aria-label="Gecontroleerd HU '+esc(code)+'"'+(s.ok?' checked':'')+'><span>gezien</span></label></td>';
     if(kind!=='piece'){
       return '<td class="c" data-l="6m"><input class="f6" type="checkbox" aria-label="6m HU '+esc(code)+'"'+(s.a?' checked':'')+'></td>'
         +'<td class="c" data-l="6.5m"><input class="f65" type="checkbox" aria-label="6.5m HU '+esc(code)+'"'+(s.b?' checked':'')+'></td>';
     }
     return '<td class="pcell" colspan="2"><div class="palrow">'+PALF.map(function(f){
-      return '<label><span class="pd">'+f[1]+(f[2]?' '+f[2]:'')+'</span><input class="pin" type="number" min="0" step="1" inputmode="numeric" data-f="'+f[0]+'" aria-label="'+f[1]+' HU '+esc(code)+'" value="'+esc(s[f[0]]===undefined?'':s[f[0]])+'"></label>';
+      var vol=f[1]+(f[2]?' '+f[2]:'');
+      return '<label title="'+esc(vol)+'"><span class="pd" data-vol="'+esc(vol)+'">'+esc(f[1])+'</span><input class="pin" type="number" min="0" step="1" inputmode="numeric" data-f="'+f[0]+'" aria-label="'+esc(vol)+' HU '+esc(code)+'" value="'+esc(s[f[0]]===undefined?'':s[f[0]])+'"></label>';
     }).join('')+'</div></td>';
   }
   var SUM={rij:[],hus:0,a:0,b:0,pal:{pe:0,pb:0,pg:0,pd:0}};
@@ -552,6 +561,7 @@ async function sbRest(path,opt){
     if(e.target.classList.contains('st')) s.t=e.target.value;
     else if(e.target.classList.contains('f6')) s.a=e.target.checked;
     else if(e.target.classList.contains('f65')) s.b=e.target.checked;
+    else if(e.target.classList.contains('fok')) s.ok=e.target.checked;
     else if(e.target.classList.contains('pin')) s[e.target.getAttribute('data-f')]=e.target.value;
     saveState();
     if(e.target.classList.contains('st')){
@@ -658,8 +668,25 @@ async function sbRest(path,opt){
         return idx[x]-idx[y];
       });
     }
+    /* Stukgoed (B- en P-types) krijgt een eigen kop en staat bovenaan. */
+    var volgorde;
+    if(bytime){
+      volgorde=lijst.slice();
+    }else{
+      var stuk=lijst.filter(isPiece),rest=lijst.filter(function(hu){return !isPiece(hu)});
+      volgorde=[];
+      if(stuk.length){volgorde.push({sub:stuk.length,title:'Stukgoed'});stuk.forEach(function(hu){volgorde.push(hu)})}
+      if(rest.length){
+        if(stuk.length) volgorde.push({sub:rest.length,title:'Stillages'});
+        rest.forEach(function(hu){volgorde.push(hu)});
+      }
+    }
     var n=0;
-    lijst.forEach(function(hu){
+    volgorde.forEach(function(hu){
+      if(typeof hu==='object'){
+        h+='<tr class="sub"><td colspan="'+(cs+2)+'">'+esc(hu.title)+'<span class="gc">'+hu.sub+' HU\'s</span></td></tr>';
+        return;
+      }
       n++;
       var end=hu.length-skip,start=end-take;
       var klant=p.customers[hu]||'Geen klant';
@@ -721,7 +748,7 @@ async function sbRest(path,opt){
   var XF=[['x6','6m'],['x65','6.5m'],['xpe','Europalet 80×120'],['xpb','Blokpalet 120×120'],['xpg','Gasket 80×80'],['xpd','Dozen']];
   var xdrow=$('xdrow');
   function fillXdrow(){
-    var oh='<label><span class="pd">Stillage type</span>'+typeSelect('crossdock',kop.xt||'')+'</label>';
+    var oh='';
     XF.forEach(function(f){
       oh+='<label><span class="pd">'+f[1]+'</span><input class="pin" type="number" min="0" step="1" inputmode="numeric" id="'+f[0]+'" aria-label="Crossdock '+f[1]+'" value="'+esc(kop[f[0]]===undefined?'':kop[f[0]])+'"></label>';
     });
@@ -775,8 +802,8 @@ async function sbRest(path,opt){
     function xn(k){var v=parseInt(kop[k],10);return isNaN(v)||v<0?0:v}
     var xa=xn('x6'),xb=xn('x65'),xp={pe:xn('xpe'),pb:xn('xpb'),pg:xn('xpg'),pd:xn('xpd')};
     var xTot=xa+xb,xPal=xp.pe+xp.pb+xp.pg+xp.pd;
-    if(xTot||xPal||(kop.xt||'')){
-      h+='<tr class="xd"><td class="kl">Crossdock'+(kop.xt?'<small>'+esc(kop.xt)+'</small>':'')+'</td><td class="num">'+xTot+'</td><td class="num">'+xa+'</td><td class="num">'+xb+'</td></tr>';
+    if(xTot||xPal){
+      h+='<tr class="xd"><td class="kl">Crossdock</td><td class="num">'+xTot+'</td><td class="num">'+xa+'</td><td class="num">'+xb+'</td></tr>';
     }
     h+='<tr class="tot"><td class="kl">Totaal</td><td class="num">'+(SUM.hus+xTot)+'</td><td class="num">'+(SUM.a+xa)+'</td><td class="num">'+(SUM.b+xb)+'</td></tr>';
     $('sumtab').innerHTML=h+'</tbody></table>';
@@ -865,6 +892,7 @@ async function sbRest(path,opt){
       var st={};
       if(x.a) st.a=true;
       if(x.b) st.b=true;
+      if(x.ok) st.ok=true;
       ['pe','pb','pg','pd'].forEach(function(k){if(x[k]) st[k]=x[k]});
       if(x.type!==undefined&&x.type!==x.type_export) st.t=x.type;
       if(Object.keys(st).length) state[x.hu]=st;
@@ -926,7 +954,7 @@ async function sbRest(path,opt){
       var s=state[x.hu]||{},n={};
       for(var k in x) n[k]=x[k];
       n.type=(s.t!==undefined?s.t:(x.type_export||''));
-      n.a=s.a?1:0;n.b=s.b?1:0;
+      n.a=s.a?1:0;n.b=s.b?1:0;n.ok=s.ok?1:0;
       n.pe=s.pe||'';n.pb=s.pb||'';n.pg=s.pg||'';n.pd=s.pd||'';
       return n;
     });
