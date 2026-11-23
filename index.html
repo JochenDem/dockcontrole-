@@ -132,6 +132,60 @@ button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
 button.print{background:#fde3bf;border-color:#e3a85f;color:#5a3708}
 button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
 /* Samenvatting: enkel zichtbaar op de export onderaan. */
+/* ---- Telefoon: elke HU als kaartje, met grote vakjes om aan te tikken ---- */
+@media (max-width:700px){
+  .wrap{padding:12px 10px 40px}
+  .panel{padding:14px 12px}
+  #out table,#out tbody,#out tr,#out td{display:block;width:auto}
+  #out thead{display:none}
+  #out table{min-width:0}
+  #out tr[data-hu],#out tr.bad{display:grid;grid-template-columns:1fr 60px 60px;align-items:center;gap:6px 8px;padding:10px 4px;border-bottom:1px solid var(--line)}
+  #out tr[data-hu] td,#out tr.bad td{border:0;padding:0}
+  #out td.n{grid-column:1;grid-row:1;font-size:.7rem;color:var(--muted)}
+  #out td.hu{grid-column:1;grid-row:2}
+  #out td.ty{grid-column:1/-1;grid-row:3}
+  #out td.ty select.st{width:100%;min-width:0}
+  #out td.u{grid-column:1;grid-row:4;font-size:.76rem}
+  #out td.chg{grid-column:1;grid-row:5;font-size:.72rem}
+  #out td.r{grid-column:2/-1;grid-row:4;text-align:right;font-size:.82rem}
+  #out td.c{grid-row:1/3;text-align:center}
+  #out td.c::before{content:attr(data-l);display:block;font-size:.62rem;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
+  #out td.c input{width:30px;height:30px}
+  #out td.pcell{grid-column:1/-1;grid-row:6}
+  #out .palrow{gap:8px}
+  #out .palrow label{flex:1 1 44%}
+  #out .pin{width:100%}
+  #out tr.grp{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:8px 10px;background:var(--accent)}
+  #out tr.grp td{border:0;padding:0;background:none;width:auto}
+  #out tr.grp td.gcnt{padding:0}
+  #out tr.grp td:first-child{flex:1 1 100%;display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px}
+  #out tr.grp b{font-size:1.15rem;line-height:1.15}
+  #out tr.grp .gc{margin-left:0}
+  #out tr.grp td.gcnt{flex:0 0 60px;text-align:center}
+  #out tr.grp td.gcnt::before{content:attr(data-l);display:block;font-size:.6rem;color:var(--accent-ink);opacity:.8}
+  #out tr.sub td{text-align:center}
+  #routes table,#routes thead,#routes tbody,#routes tr,#routes td,#routes th{display:block;width:auto}
+  #routes table{min-width:0}
+  #routes .tablewrap,#routes{overflow:visible}
+  #routes thead{display:none}
+  #routes tr{display:grid;grid-template-columns:auto auto 1fr auto;align-items:center;gap:3px 9px;padding:10px 4px;border-bottom:1px solid var(--line)}
+  #routes td{border:0;padding:0;font-size:.8rem;text-align:left}
+  #routes td.code2{grid-column:1/4;grid-row:1;font-size:1.25rem}
+  #routes td.st{grid-column:1;grid-row:2}
+  #routes td.dk{grid-column:2;grid-row:2}
+  #routes td.dk::before{content:'dok ';color:var(--muted)}
+  #routes td.an{grid-column:3;grid-row:2}
+  #routes td.an::after{content:" HU's";color:var(--muted)}
+  #routes td.dt{grid-column:1/4;grid-row:3;color:var(--muted)}
+  #routes td.c{grid-column:4;grid-row:1/4;justify-self:end;align-self:center}
+  #routes button.open{padding:8px 16px}
+  .dbrow .fld{flex:1 1 100%}
+  .xdrow label{flex:1 1 44%}
+  .xdrow select.st{width:100%}
+  .sums{gap:14px 18px}
+  .sbinfo{text-align:left}
+  .syncbar{flex-wrap:wrap;gap:8px}
+}
 /* Lijst met klaargezette routes. */
 #routes td.code2{font-family:var(--font-mono);font-weight:600;font-size:1.05rem}
 #routes tr.open td{background:var(--accent-soft)}
@@ -300,6 +354,7 @@ kbd{font-family:var(--font-mono);font-size:.8rem;padding:1px 6px;border:1px soli
     <div class="row between syncbar noprint">
       <div class="row">
         <button type="button" class="primary" id="klaar">Controle afgerond</button>
+        <button type="button" id="leeg">Velden leegmaken</button>
         <button type="button" id="sluit">Sluiten</button>
       </div>
       <span class="sbinfo" id="sbinfo"></span>
@@ -445,8 +500,8 @@ async function sbRest(path,opt){
   function lastCells(hu,code,s,kind){
     if(kind==='loose') return '<td class="c" colspan="2"></td>';
     if(kind!=='piece'){
-      return '<td class="c"><input class="f6" type="checkbox" aria-label="6m HU '+esc(code)+'"'+(s.a?' checked':'')+'></td>'
-        +'<td class="c"><input class="f65" type="checkbox" aria-label="6.5m HU '+esc(code)+'"'+(s.b?' checked':'')+'></td>';
+      return '<td class="c" data-l="6m"><input class="f6" type="checkbox" aria-label="6m HU '+esc(code)+'"'+(s.a?' checked':'')+'></td>'
+        +'<td class="c" data-l="6.5m"><input class="f65" type="checkbox" aria-label="6.5m HU '+esc(code)+'"'+(s.b?' checked':'')+'></td>';
     }
     return '<td class="pcell" colspan="2"><div class="palrow">'+PALF.map(function(f){
       return '<label><span class="pd">'+f[1]+(f[2]?' '+f[2]:'')+'</span><input class="pin" type="number" min="0" step="1" inputmode="numeric" data-f="'+f[0]+'" aria-label="'+f[1]+' HU '+esc(code)+'" value="'+esc(s[f[0]]===undefined?'':s[f[0]])+'"></label>';
@@ -618,7 +673,7 @@ async function sbRest(path,opt){
     groups.forEach(function(g){
       var tot=0,hasW=false;
       g.hus.forEach(function(hu){var w=toNum(p.weights[hu]);if(w!==null){tot+=w;hasW=true}});
-      h+='<tr class="grp" data-n="'+g.hus.length+'" data-naam="'+esc(g.name||'Geen klant')+'"><td colspan="'+cs+'"><b>'+esc(g.name||'Geen klant')+'</b><span class="gc">'+g.hus.length+' HU\'s'+(hasW?' · '+fmt(tot)+' kg':'')+'</span></td><td class="c gcnt"><span class="chip"><i class="n6">0</i></span></td><td class="c gcnt"><span class="chip"><i class="n65">0</i></span></td></tr>';
+      h+='<tr class="grp" data-n="'+g.hus.length+'" data-naam="'+esc(g.name||'Geen klant')+'"><td colspan="'+cs+'"><b>'+esc(g.name||'Geen klant')+'</b><span class="gc">'+g.hus.length+' HU\'s'+(hasW?' · '+fmt(tot)+' kg':'')+'</span></td><td class="c gcnt" data-l="6m"><span class="chip"><i class="n6">0</i></span></td><td class="c gcnt" data-l="6.5m"><span class="chip"><i class="n65">0</i></span></td></tr>';
       /* S0 (los in een andere stillage) komt onderaan de klant onder een eigen subtitel. */
       /* Onder elke klant: eerst de stillages e.a., dan Stukgoed (B- en P-types), dan S0. */
       function tt(hu){return effType(hu)}
@@ -650,7 +705,7 @@ async function sbRest(path,opt){
       var code=hu.slice(start,end),s=state[hu]||{};
       codes.push(code);
       h+='<tr data-hu="'+esc(hu)+'"><td class="n">'+n+'</td>'
-        +'<td>'+typeSelect(code,effType(hu),p.types[hu]||'')+'</td>'
+        +'<td class="ty">'+typeSelect(code,effType(hu),p.types[hu]||'')+'</td>'
         +'<td class="u" title="'+esc(p.users[hu]||'')+'">'+esc(userName(p.users[hu]))+'</td>'
         +(bytime?'<td class="chg">'+esc(chgText(p.changed[hu]))+'</td>':'')
         +'<td class="r">'+(p.weights[hu]?esc(p.weights[hu])+' kg':'–')+'</td>'
@@ -810,10 +865,10 @@ async function sbRest(path,opt){
     LIJST.forEach(function(r){
       h+='<tr data-tu="'+esc(r.tu)+'"'+(ROW&&ROW.tu===r.tu?' class="open"':'')+'>'
         +'<td class="code2">'+esc(r.tu)+'</td>'
-        +'<td class="u">'+esc(r.dock||'–')+'</td>'
-        +'<td class="r">'+(r.aantal||0)+'</td>'
-        +'<td class="u"><span class="st-'+esc(r.status)+'">'+(STATUS[r.status]||esc(r.status))+'</span></td>'
-        +'<td class="u">'+stamp(r.klaargezet_op)+'</td>'
+        +'<td class="u dk">'+esc(r.dock||'–')+'</td>'
+        +'<td class="r an">'+(r.aantal||0)+'</td>'
+        +'<td class="u st"><span class="st-'+esc(r.status)+'">'+(STATUS[r.status]||esc(r.status))+'</span></td>'
+        +'<td class="u dt">'+stamp(r.klaargezet_op)+'</td>'
         +'<td class="c"><button type="button" class="open" data-tu="'+esc(r.tu)+'">Openen</button></td></tr>';
     });
     routes.innerHTML=h+'</tbody></table>';
@@ -857,8 +912,9 @@ async function sbRest(path,opt){
     var x=$('xd');x.value=kop.x;x.style.height='';growXd();
     tuEl.value=r.tu;
     render();
-    info(STATUS[r.status]+' · klaargezet '+stamp(r.klaargezet_op)
-      +(r.gecontroleerd_op?' · afgewerkt '+stamp(r.gecontroleerd_op)+(r.gecontroleerd_door?' door '+r.gecontroleerd_door:''):''));
+    info(r.gecontroleerd_op
+      ? 'Afgewerkt '+stamp(r.gecontroleerd_op)+(r.gecontroleerd_door?' door '+r.gecontroleerd_door:'')+' · klaargezet '+stamp(r.klaargezet_op)
+      : (r.status==='bezig'?'In controle':'Klaargezet')+' '+stamp(r.klaargezet_op));
   }
   async function openRoute(tu){
     if(!tu) return;
@@ -874,6 +930,19 @@ async function sbRest(path,opt){
       $('h-prev').scrollIntoView({behavior:'smooth',block:'start'});
     }catch(e){info(praat(e,'openen mislukt'),'err')}
   }
+  /* Alles wat is aangeduid terug op nul, de route zelf blijft staan. */
+  $('leeg').addEventListener('click',function(){
+    if(!ROW){info('Kies eerst een route.','err');return}
+    if(!confirm('Alle vinkjes, paletten, types en crossdockgegevens van TU '+ROW.tu+' leegmaken?')) return;
+    clearTimeout(wacht);wacht=null;
+    state={};saveState();
+    kop.xt='';['x6','x65','xpe','xpb','xpg','xpd'].forEach(function(k){kop[k]=''});kop.x='';
+    saveKop();fillXdrow();
+    var x=$('xd');x.value='';x.style.height='';
+    render();
+    bewaar();
+    info('Alles leeggemaakt.','ok');
+  });
   $('sluit').addEventListener('click',function(){
     clearTimeout(wacht);
     ROW=null;state={};saveState();
