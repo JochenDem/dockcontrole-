@@ -139,11 +139,14 @@ button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
   #out table,#out tbody,#out tr,#out td{display:block;width:auto}
   #out thead{display:none}
   #out table{min-width:0}
-  #out tr[data-hu],#out tr.bad{display:grid;grid-template-columns:auto 1fr 52px 52px 52px;align-items:center;gap:5px 8px;padding:9px 4px;border-bottom:1px solid var(--line)}
+  #out tr[data-hu],#out tr.bad{display:grid;grid-template-columns:auto minmax(0,1fr) 44px 44px 44px;align-items:center;gap:5px 6px;padding:9px 4px;border-bottom:1px solid var(--line)}
   #out tr[data-hu] td,#out tr.bad td{border:0;padding:0}
   #out td.n{grid-column:1;grid-row:1;align-self:start;padding-top:3px;font-size:.7rem;color:var(--muted)}
   #out td.hu{grid-column:2;grid-row:1;white-space:normal}
-  #out td.hu .code{font-size:1.2rem}
+  #out td.hu{min-width:0}
+  #out td.hu .code{font-size:1.05rem;letter-spacing:.08em;padding:1px 6px 1px 8px}
+  #out select.pick{min-width:0;flex:1 1 100%}
+  #out .s0to>span:first-child{display:none}
   #out td.hu small.kl{display:block;line-height:1.25}
   #out td.hu small.vol{display:none}
   #out td.ty{grid-column:1/-1;grid-row:2}
@@ -152,7 +155,8 @@ button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
   #out td.chg{grid-column:1/-1;grid-row:5;font-size:.72rem}
   #out td.r{grid-column:3/-1;grid-row:3;text-align:right;font-size:.82rem}
   #out td.c{grid-row:1;text-align:center}
-  #out td.c.ok{grid-column:span 2}
+  #out td.c.ok{grid-column:3}
+  #out td.c.ok .okl span{display:none}
   #out td.q{grid-column:5}
   #out td.c::before{content:attr(data-l);display:block;font-size:.62rem;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
   #out td.c input{width:30px;height:30px}
@@ -709,7 +713,7 @@ async function sbRest(path,opt){
       if(effType(hu)==='S0'&&s&&s.to) (toS1[s.to]||(toS1[s.to]=[])).push(codeVan(hu));
     });
     function pickHtml(hu,code,klant,sel){
-      var lst=s1by[nk(klant)]||[],o='<option value="">– kies S1 van '+esc(klant)+' –</option>',found=false;
+      var lst=s1by[nk(klant)]||[],o='<option value="">– kies S1 –</option>',found=false;
       lst.forEach(function(h2){
         var on=h2===sel;if(on) found=true;
         o+='<option value="'+esc(h2)+'"'+(on?' selected':'')+'>'+esc(codeVan(h2))+'</option>';
