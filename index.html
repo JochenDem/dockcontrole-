@@ -139,19 +139,22 @@ button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
   #out table,#out tbody,#out tr,#out td{display:block;width:auto}
   #out thead{display:none}
   #out table{min-width:0}
-  #out tr[data-hu],#out tr.bad{display:grid;grid-template-columns:1fr 60px 60px;align-items:center;gap:6px 8px;padding:10px 4px;border-bottom:1px solid var(--line)}
+  #out tr[data-hu],#out tr.bad{display:grid;grid-template-columns:auto 1fr 56px 56px;align-items:center;gap:5px 8px;padding:9px 4px;border-bottom:1px solid var(--line)}
   #out tr[data-hu] td,#out tr.bad td{border:0;padding:0}
-  #out td.n{grid-column:1;grid-row:1;font-size:.7rem;color:var(--muted)}
-  #out td.hu{grid-column:1;grid-row:2}
-  #out td.ty{grid-column:1/-1;grid-row:3}
+  #out td.n{grid-column:1;grid-row:1;align-self:start;padding-top:3px;font-size:.7rem;color:var(--muted)}
+  #out td.hu{grid-column:2;grid-row:1;white-space:normal}
+  #out td.hu .code{font-size:1.2rem}
+  #out td.hu small.kl{display:block;line-height:1.25}
+  #out td.hu small.vol{display:none}
+  #out td.ty{grid-column:1/-1;grid-row:2}
   #out td.ty select.st{width:100%;min-width:0}
-  #out td.u{grid-column:1;grid-row:4;font-size:.76rem}
-  #out td.chg{grid-column:1;grid-row:5;font-size:.72rem}
-  #out td.r{grid-column:2/-1;grid-row:4;text-align:right;font-size:.82rem}
-  #out td.c{grid-row:1/3;text-align:center}
+  #out td.u{grid-column:1/3;grid-row:3;font-size:.76rem}
+  #out td.chg{grid-column:1/-1;grid-row:5;font-size:.72rem}
+  #out td.r{grid-column:3/-1;grid-row:3;text-align:right;font-size:.82rem}
+  #out td.c{grid-row:1;text-align:center}
   #out td.c::before{content:attr(data-l);display:block;font-size:.62rem;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
   #out td.c input{width:30px;height:30px}
-  #out td.pcell{grid-column:1/-1;grid-row:6}
+  #out td.pcell{grid-column:1/-1;grid-row:4}
   #out .palrow{gap:8px}
   #out .palrow label{flex:1 1 44%}
   #out .pin{width:100%}
@@ -269,8 +272,12 @@ td.chg{font-family:var(--font-mono);font-size:.82rem;color:var(--muted);white-sp
 mark{background:var(--mark);color:var(--mark-ink);padding:1px 2px;border-radius:3px;font-weight:600}
 /* De code ziet eruit zoals op het label: witte cijfers op een zwarte balk. */
 td.hu .code{display:inline-block;background:var(--label-bg);color:var(--label-fg);font-family:Verdana,"DejaVu Sans",Geneva,sans-serif;font-weight:700;font-size:1rem;line-height:1.4;letter-spacing:.1em;padding:1px 10px 1px 12px;border-radius:2px;box-shadow:0 0 0 1px var(--line);font-variant-numeric:tabular-nums}
-td.hu small{display:block;margin-top:3px}
+td.hu .code{font-size:1.15rem;letter-spacing:.12em}
 td.hu small{font-size:.72rem;color:var(--muted)}
+td.hu small.kl{display:inline-block;margin-top:2px;font-family:var(--font-body);font-weight:600;color:var(--ink);letter-spacing:0}
+td.hu small.vol{display:inline}
+td.hu small.vol::before{content:' · ';color:var(--muted)}
+th,td{padding:6px 12px}
 td.hu mark{font-weight:500;padding:0 1px}
 select.st{width:100%;min-width:220px;padding:4px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font:inherit}
 select.st:focus{background:var(--surface);border-color:var(--accent)}
@@ -509,23 +516,19 @@ async function sbRest(path,opt){
   }
   var SUM={rij:[],hus:0,a:0,b:0,pal:{pe:0,pb:0,pg:0,pd:0}};
   function updateCounts(){
-    var grp=null,a=0,b=0,ta=0,tb=0,found=false,rij=[],thus=0;
-    function flush(){
-      if(!grp) return;
-      var x=grp.querySelector('.n6'),y=grp.querySelector('.n65');
-      if(x) x.textContent=a;
-      if(y) y.textContent=b;
-      var n=parseInt(grp.getAttribute('data-n'),10)||0;
-      thus+=n;
-      rij.push({naam:grp.getAttribute('data-naam')||'',n:n,a:a,b:b});
-    }
-    out.querySelectorAll('tr').forEach(function(tr){
-      if(tr.classList.contains('grp')){flush();grp=tr;a=0;b=0;found=true;return}
+    var ta=0,tb=0,found=false,orde=[],per={};
+    out.querySelectorAll('tr[data-kl]').forEach(function(tr){
+      found=true;
+      var k=tr.getAttribute('data-kl')||'';
+      if(!(k in per)){per[k]={naam:k,n:0,a:0,b:0};orde.push(k)}
+      per[k].n++;
       var c6=tr.querySelector('.f6'),c65=tr.querySelector('.f65');
-      if(c6&&c6.checked){a++;ta++}
-      if(c65&&c65.checked){b++;tb++}
+      if(c6&&c6.checked){per[k].a++;ta++}
+      if(c65&&c65.checked){per[k].b++;tb++}
     });
-    flush();
+    orde.sort(function(x,y){return x.localeCompare(y,'nl',{sensitivity:'base'})});
+    var rij=orde.map(function(k){return per[k]}),thus=0;
+    rij.forEach(function(r){thus+=r.n});
     /* Totaal paletten bij Stukgoed (som van de velden in de Stukgoed-rijen). */
     var ps={pe:0,pb:0,pg:0,pd:0},anyPin=false;
     out.querySelectorAll('.pin').forEach(function(inp){
@@ -629,89 +632,52 @@ async function sbRest(path,opt){
       count.textContent='';copyBtn.disabled=true;return;
     }
     var bytime=sortMode==='tijd',cs=bytime?6:5;
-    var h='<table><thead><tr><th>#</th><th>Stillage type</th><th>User</th>'+(bytime?'<th>Gewijzigd</th>':'')+'<th class="r">Total weight</th><th>HU\'s</th><th class="c">6m</th><th class="c">6.5m</th></tr></thead><tbody>';
-    /* Groepeer per klant: een TU kan meerdere klanten bevatten. */
-    var groups=[],gi={};
-    p.hus.forEach(function(hu){
-      var k=p.customers[hu]||'';
-      if(!(k in gi)){gi[k]=groups.length;groups.push({name:k,hus:[]})}
-      groups[gi[k]].hus.push(hu);
-    });
-    groups.sort(function(a,b){
-      if(!a.name) return 1;
-      if(!b.name) return -1;
-      return a.name.localeCompare(b.name,'nl',{sensitivity:'base'});
-    });
-    /* Binnen elke klant sorteren op stillage type (B1, S0, S1, S2, S3, S12, W1, ...), daarna op volgorde van de export. */
+    var h='<table><thead><tr><th>#</th><th>Stillage type</th><th>User</th>'+(bytime?'<th>Gewijzigd</th>':'')+'<th class="r">Total weight</th><th>Code &middot; klant</th><th class="c">6m</th><th class="c">6.5m</th></tr></thead><tbody>';
+    /* Eén doorlopende lijst: de controlecode is wat je zoekt, de klant staat er klein onder. */
     var idx={};
     p.hus.forEach(function(hu,i){idx[hu]=i});
-    function tkey(hu){
-      var t=effType(hu);if(!t) return null;
-      var m=/^([A-Za-z]*)(\d*)/.exec(t);
-      return [m[1].toUpperCase(),m[2]===''?0:parseInt(m[2],10)];
+    function tt(hu){return effType(hu)}
+    var isLoose=function(hu){return tt(hu)==='S0'};
+    var isPiece=function(hu){return /^[BP]/i.test(tt(hu))};
+    function codeVan(hu){
+      var end=hu.length-skip,start=end-take;
+      return start<0?hu:hu.slice(start,end);
     }
-    groups.forEach(function(g){
-      if(bytime){
-        g.hus.sort(function(a,b){
-          var x=chgKey(p.changed[a]),y=chgKey(p.changed[b]);
-          if(x!==y) return x<y?-1:1;
-          return idx[a]-idx[b];
-        });
-        return;
-      }
-      g.hus.sort(function(a,b){
-        var x=tkey(a),y=tkey(b);
-        if(!x&&!y) return idx[a]-idx[b];
-        if(!x) return 1;
-        if(!y) return -1;
-        if(x[0]!==y[0]) return x[0]<y[0]?-1:1;
-        if(x[1]!==y[1]) return x[1]-y[1];
-        return idx[a]-idx[b];
+    var lijst=p.hus.slice();
+    if(bytime){
+      lijst.sort(function(x,y){
+        var a1=chgKey(p.changed[x]),b1=chgKey(p.changed[y]);
+        if(a1!==b1) return a1<b1?-1:1;
+        return idx[x]-idx[y];
       });
-    });
+    }else{
+      /* Op controlecode, zodat je het label dat je vastneemt meteen terugvindt. */
+      lijst.sort(function(x,y){
+        var a1=codeVan(x),b1=codeVan(y);
+        if(a1!==b1) return a1<b1?-1:1;
+        return idx[x]-idx[y];
+      });
+    }
     var n=0;
-    groups.forEach(function(g){
-      var tot=0,hasW=false;
-      g.hus.forEach(function(hu){var w=toNum(p.weights[hu]);if(w!==null){tot+=w;hasW=true}});
-      h+='<tr class="grp" data-n="'+g.hus.length+'" data-naam="'+esc(g.name||'Geen klant')+'"><td colspan="'+cs+'"><b>'+esc(g.name||'Geen klant')+'</b><span class="gc">'+g.hus.length+' HU\'s'+(hasW?' · '+fmt(tot)+' kg':'')+'</span></td><td class="c gcnt" data-l="6m"><span class="chip"><i class="n6">0</i></span></td><td class="c gcnt" data-l="6.5m"><span class="chip"><i class="n65">0</i></span></td></tr>';
-      /* S0 (los in een andere stillage) komt onderaan de klant onder een eigen subtitel. */
-      /* Onder elke klant: eerst de stillages e.a., dan Stukgoed (B- en P-types), dan S0. */
-      function tt(hu){return effType(hu)}
-      var isLoose=function(hu){return tt(hu)==='S0'};
-      var isPiece=function(hu){return /^[BP]/i.test(tt(hu))};
-      var main=g.hus.filter(function(hu){return !isLoose(hu)&&!isPiece(hu)});
-      var piece=g.hus.filter(isPiece);
-      var loose=g.hus.filter(isLoose);
-      var seq;
-      if(bytime){
-        /* Op tijdstip: één doorlopende lijst per klant, zonder subgroepen. */
-        seq=g.hus.slice();
-      }else{
-        seq=main.slice();
-        if(piece.length){seq.push({sub:piece.length,title:'Stukgoed'});piece.forEach(function(hu){seq.push(hu)})}
-        if(loose.length){seq.push({sub:loose.length,title:'Loose in another stillage'});loose.forEach(function(hu){seq.push(hu)})}
-      }
-      seq.forEach(function(hu){
-      if(typeof hu==='object'){
-        h+='<tr class="sub"><td colspan="'+(cs+2)+'">'+esc(hu.title)+'<span class="gc">'+hu.sub+' HU\'s</span></td></tr>';
-        return;
-      }
+    lijst.forEach(function(hu){
       n++;
       var end=hu.length-skip,start=end-take;
+      var klant=p.customers[hu]||'Geen klant';
       if(start<0){
-        h+='<tr class="bad"><td class="n">'+n+'</td><td colspan="'+(cs-2)+'">Te kort voor de regel hierboven</td><td class="hu">'+esc(hu)+'</td><td class="c" colspan="2"></td></tr>';
+        h+='<tr class="bad" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td><td colspan="'+(cs-2)+'">Te kort voor de regel hierboven</td><td class="hu">'+esc(hu)+'</td><td class="c" colspan="2"></td></tr>';
         return;
       }
       var code=hu.slice(start,end),s=state[hu]||{};
       codes.push(code);
-      h+='<tr data-hu="'+esc(hu)+'"><td class="n">'+n+'</td>'
+      h+='<tr data-hu="'+esc(hu)+'" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td>'
         +'<td class="ty">'+typeSelect(code,effType(hu),p.types[hu]||'')+'</td>'
         +'<td class="u" title="'+esc(p.users[hu]||'')+'">'+esc(userName(p.users[hu]))+'</td>'
         +(bytime?'<td class="chg">'+esc(chgText(p.changed[hu]))+'</td>':'')
         +'<td class="r">'+(p.weights[hu]?esc(p.weights[hu])+' kg':'–')+'</td>'
-        +'<td class="hu"><span class="code">'+esc(code)+'</span><br><small>'+esc(hu.slice(0,start))+'<mark>'+esc(code)+'</mark>'+esc(hu.slice(end))+'</small></td>'
+        +'<td class="hu"><span class="code">'+esc(code)+'</span>'
+          +'<small class="kl">'+esc(klant)+'</small>'
+          +'<small class="vol">'+esc(hu.slice(0,start))+'<mark>'+esc(code)+'</mark>'+esc(hu.slice(end))+'</small></td>'
         +lastCells(hu,code,s,isPiece(hu)?'piece':(isLoose(hu)?'loose':''))+'</tr>';
-      });
     });
     out.innerHTML=h+'</tbody></table>';
     updateCounts();
