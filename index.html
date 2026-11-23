@@ -1061,13 +1061,23 @@ async function sbRest(path,opt){
       return n;
     });
   }
+  /* Een HU is gekeurd zodra er een keuze is: 6m, 6.5m, ? (niet gevonden), gezien (S0) of paletten/dozen (stukgoed). */
+  function heeftKeuze(n){
+    var t=n.type||'';
+    if(n.q) return true;
+    if(t==='S0') return !!n.ok;
+    if(/^[BP]/i.test(t)) return ['pe','pb','pg','pd'].some(function(k){return String(n[k]==null?'':n[k]).trim()!==''});
+    return !!(n.a||n.b);
+  }
+  function zonderKeuze(lijst){return lijst.filter(function(n){return !heeftKeuze(n)}).length}
   var bezig=false,opnieuw=false,wacht=null;
   async function bewaar(extra){
     if(!ROW) return false;
     if(bezig){opnieuw=true;return false}
     bezig=true;
     var tu=ROW.tu;
-    var body={hus:huLijst(),dock:(dockEl.value.trim()||null),crossdock:{t:kop.xt||'',a:kop.x6||'',b:kop.x65||'',pe:kop.xpe||'',pb:kop.xpb||'',pg:kop.xpg||'',pd:kop.xpd||'',tekst:kop.x||''}};
+    var lijst=huLijst();
+    var body={hus:lijst,volledig_gekeurd:(lijst.length>0&&zonderKeuze(lijst)===0),dock:(dockEl.value.trim()||null),crossdock:{t:kop.xt||'',a:kop.x6||'',b:kop.x65||'',pe:kop.xpe||'',pb:kop.xpb||'',pg:kop.xpg||'',pd:kop.xpd||'',tekst:kop.x||''}};
     if(extra) for(var k in extra) body[k]=extra[k];
     try{
       await sbRest('dock_routes?tu=eq.'+encodeURIComponent(tu),{method:'PATCH',headers:{Prefer:'return=minimal'},body:body});
@@ -1095,8 +1105,9 @@ async function sbRest(path,opt){
 
   $('klaar').addEventListener('click',async function(){
     if(!ROW){info('Kies eerst een route.','err');return}
-    var tu=ROW.tu;
-    if(!confirm('Controle van TU '+tu+' afronden?\n\nDe gegevens worden bewaard in de database en de TU wordt op afgewerkt gezet. '
+    var tu=ROW.tu,mis=zonderKeuze(huLijst());
+    if(!confirm((mis?'LET OP: bij '+mis+' van de '+huLijst().length+' HU\'s is nog niets aangeduid (6m, 6.5m, ?, gezien of paletten).\nDe route wordt dan NIET als volledig gekeurd gemarkeerd.\n\n':'')
+      +'Controle van TU '+tu+' afronden?\n\nDe gegevens worden bewaard in de database en de TU wordt op afgewerkt gezet. '
       +'Daarna worden alle velden op deze pagina leeggemaakt.\n\nWil je eerst nog de PDF exporteren? Annuleer dan en doe dat eerst.')) return;
     await spoel();
     var ok=await bewaar({status:'klaar',gecontroleerd_op:new Date().toISOString(),gecontroleerd_door:wie()});
