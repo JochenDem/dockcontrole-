@@ -907,6 +907,13 @@ async function sbRest(path,opt){
     if(!sbRead()){routes.innerHTML='<div class="empty">Log in om de routes te zien.</div>';return}
     try{
       var f=$('toonklaar').checked?'':'&status=neq.klaar';
+      /* Routes die via de pc-pagina als 'controle compleet' zijn verstuurd (tabel dock_controle_compleet) verdwijnen uit de lijst, tenzij 'ook afgewerkte' aanstaat. */
+      if(!$('toonklaar').checked){
+        try{
+          var kl=await sbRest('dock_controle_compleet?select=tu')||[];
+          if(kl.length) f+='&tu=not.in.('+kl.map(function(x){return encodeURIComponent('"'+String(x.tu).replace(/"/g,'')+'"')}).join(',')+')';
+        }catch(e){ if(e&&e.status===401) throw e; }
+      }
       LIJST=await sbRest('dock_routes?select=tu,dock,status,klaargezet_op,gecontroleerd_op,gecontroleerd_door,aantal'+f+'&order=klaargezet_op.desc&limit=60')||[];
       toonLijst();
     }catch(e){
