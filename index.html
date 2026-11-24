@@ -59,7 +59,7 @@ html.printing{--bg:#fff;--surface:#fff;--ink:#000;--muted:#444;--line:#999}
 html.printing .noprint,html.printing #badge,html.printing #count,html.printing #copy,html.printing p.sub,html.printing section[aria-labelledby="h-plak"]{display:none!important}
 html.printing .panel{border:0;padding:0}
 html.printing .tablewrap{overflow:visible}
-html.printing select.st,html.printing select.pick{-webkit-appearance:none;appearance:none;border:0;background:none;padding:0;min-width:0;width:auto;color:#000;font-weight:500}
+html.printing select.st{-webkit-appearance:none;appearance:none;border:0;background:none;padding:0;min-width:0;width:auto;color:#000;font-weight:500}
 html.printing th,html.printing td{padding:2px 8px}
 html.printing tr.grp td{padding:4px 8px}
 html.printing tr.grp b{font-size:1.15rem}
@@ -139,25 +139,19 @@ button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
   #out table,#out tbody,#out tr,#out td{display:block;width:auto}
   #out thead{display:none}
   #out table{min-width:0}
-  #out tr[data-hu],#out tr.bad{display:grid;grid-template-columns:auto minmax(0,1fr) 44px 44px 44px;align-items:center;gap:5px 6px;padding:9px 4px;border-bottom:1px solid var(--line)}
+  #out tr[data-hu],#out tr.bad{display:grid;grid-template-columns:auto 1fr 56px 56px;align-items:center;gap:5px 8px;padding:9px 4px;border-bottom:1px solid var(--line)}
   #out tr[data-hu] td,#out tr.bad td{border:0;padding:0}
   #out td.n{grid-column:1;grid-row:1;align-self:start;padding-top:3px;font-size:.7rem;color:var(--muted)}
   #out td.hu{grid-column:2;grid-row:1;white-space:normal}
-  #out td.hu{min-width:0}
-  #out td.hu .code{font-size:1.05rem;letter-spacing:.08em;padding:1px 6px 1px 8px}
-  #out select.pick{min-width:0;flex:1 1 100%}
-  #out .s0to>span:first-child{display:none}
+  #out td.hu .code{font-size:1.2rem}
   #out td.hu small.kl{display:block;line-height:1.25}
   #out td.hu small.vol{display:none}
   #out td.ty{grid-column:1/-1;grid-row:2}
   #out td.ty select.st{width:100%;min-width:0}
   #out td.u{display:none}
   #out td.chg{grid-column:1/-1;grid-row:5;font-size:.72rem}
-  #out td.r{grid-column:3/-1;grid-row:3;text-align:right;font-size:.82rem}
+  #out td.r{grid-column:1/-1;grid-row:3;text-align:left;font-size:.8rem;color:var(--muted)}
   #out td.c{grid-row:1;text-align:center}
-  #out td.c.ok{grid-column:3}
-  #out td.c.ok .okl span{display:none}
-  #out td.q{grid-column:5}
   #out td.c::before{content:attr(data-l);display:block;font-size:.62rem;letter-spacing:.06em;color:var(--muted);margin-bottom:3px}
   #out td.c input{width:30px;height:30px}
   #out td.pcell{grid-column:1/-1;grid-row:4}
@@ -196,15 +190,8 @@ button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
   .syncbar{flex-wrap:wrap;gap:8px}
 }
 .okl{display:inline-flex;align-items:center;gap:6px;color:var(--muted);font-size:.72rem;letter-spacing:.04em;text-transform:uppercase}
-.okl input{width:22px;height:22px}
+.okl input{width:18px;height:18px}
 td.c.ok{text-align:center}
-/* ? = niet gevonden: de hele rij wordt oranje. */
-#out tr.nf td{background:color-mix(in srgb,#f59e0b 38%,var(--surface))}
-td.c.q input{accent-color:#d97706}
-.s0to{display:flex;align-items:center;flex-wrap:wrap;gap:4px 8px;margin-top:4px;font-family:var(--font-body);font-size:.8rem;color:var(--muted);white-space:normal}
-.s0to b{font-family:var(--font-mono);color:var(--ink);font-weight:500}
-select.pick{flex:1 1 220px;width:100%;min-width:220px;padding:4px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font:inherit}
-select.pick:focus{background:var(--surface);border-color:var(--accent)}
 /* Lijst met klaargezette routes. */
 #routes td.code2{font-family:var(--font-mono);font-weight:600;font-size:1.05rem}
 #routes tr.open td{background:var(--accent-soft)}
@@ -381,7 +368,7 @@ kbd{font-family:var(--font-mono);font-size:.8rem;padding:1px 6px;border:1px soli
       </div>
     </div>
     <div class="dock">
-      <label class="fld" for="dock"><span class="k">Dock</span><input class="big" id="dock" type="text" maxlength="8" placeholder="–" autocomplete="off" spellcheck="false"></label>
+      <label class="fld" for="dock"><span class="k">Dock</span><input class="big" id="dock" type="text" placeholder="–" readonly tabindex="-1"></label>
       <label class="fld" for="tu"><span class="k">TU</span><input class="big" id="tu" type="text" placeholder="–" readonly tabindex="-1"></label>
     </div>
     <div class="row between syncbar noprint">
@@ -406,7 +393,6 @@ kbd{font-family:var(--font-mono);font-size:.8rem;padding:1px 6px;border:1px soli
       <div class="sum"><span class="k">Aantal S1</span><span class="v3" id="s1n">–</span></div>
       <div class="sum"><span class="k">6m</span><span class="v3" id="n6">–</span></div>
       <div class="sum"><span class="k">6.5m</span><span class="v3" id="n65">–</span></div>
-      <div class="sum"><span class="k">Niet gevonden (?)</span><span class="v3" id="nq">–</span></div>
       <div class="sum"><span class="k">Gewicht S1</span><span class="v3" id="s1w">–</span></div>
       <div class="sum end"><span class="k">Totaal gewicht TU</span><span class="v3" id="total">–</span></div>
     </div>
@@ -479,7 +465,7 @@ async function sbRest(path,opt){
 <script>
 (function(){
   var $=function(id){return document.getElementById(id)};
-  var out=$('out'),badge=$('badge'),count=$('count'),dockEl=$('dock'),totalEl=$('total'),s1nEl=$('s1n'),s1wEl=$('s1w'),n6El=$('n6'),n65El=$('n65'),nqEl=$('nq'),copyBtn=$('copy');
+  var out=$('out'),badge=$('badge'),count=$('count'),dockEl=$('dock'),totalEl=$('total'),s1nEl=$('s1n'),s1wEl=$('s1w'),n6El=$('n6'),n65El=$('n65'),copyBtn=$('copy');
   var codes=[],LAST=null;
 
   $('today').textContent=new Date().toLocaleDateString('nl-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
@@ -532,30 +518,27 @@ async function sbRest(path,opt){
   /* Stukgoed-HU's krijgen invulvelden in de plaats van de vakjes 6m en 6.5m. */
   var PALF=[['pe','Europalet','80×120'],['pb','Blokpalet','120×120'],['pg','Gasket','80×80'],['pd','Dozen','']];
   function lastCells(hu,code,s,kind){
-    var q='<td class="c q" data-l="?"><input class="fq" type="checkbox" title="Niet gevonden" aria-label="Niet gevonden HU '+esc(code)+'"'+(s.q?' checked':'')+'></td>';
-    if(kind==='loose') return '<td class="c ok" colspan="2" data-l="gezien"><label class="okl"><input class="fok" type="checkbox" aria-label="Gecontroleerd HU '+esc(code)+'"'+(s.ok?' checked':'')+'><span>gezien</span></label></td>'+q;
+    if(kind==='loose') return '<td class="c ok" colspan="2" data-l="gezien"><label class="okl"><input class="fok" type="checkbox" aria-label="Gecontroleerd HU '+esc(code)+'"'+(s.ok?' checked':'')+'><span>gezien</span></label></td>';
     if(kind!=='piece'){
       return '<td class="c" data-l="6m"><input class="f6" type="checkbox" aria-label="6m HU '+esc(code)+'"'+(s.a?' checked':'')+'></td>'
-        +'<td class="c" data-l="6.5m"><input class="f65" type="checkbox" aria-label="6.5m HU '+esc(code)+'"'+(s.b?' checked':'')+'></td>'+q;
+        +'<td class="c" data-l="6.5m"><input class="f65" type="checkbox" aria-label="6.5m HU '+esc(code)+'"'+(s.b?' checked':'')+'></td>';
     }
     return '<td class="pcell" colspan="2"><div class="palrow">'+PALF.map(function(f){
       var vol=f[1]+(f[2]?' '+f[2]:'');
       return '<label title="'+esc(vol)+'"><span class="pd" data-vol="'+esc(vol)+'">'+esc(f[1])+'</span><input class="pin" type="number" min="0" step="1" inputmode="numeric" data-f="'+f[0]+'" aria-label="'+esc(vol)+' HU '+esc(code)+'" value="'+esc(s[f[0]]===undefined?'':s[f[0]])+'"></label>';
-    }).join('')+'</div></td>'+q;
+    }).join('')+'</div></td>';
   }
-  var SUM={rij:[],hus:0,a:0,b:0,q:0,pal:{pe:0,pb:0,pg:0,pd:0}};
+  var SUM={rij:[],hus:0,a:0,b:0,pal:{pe:0,pb:0,pg:0,pd:0}};
   function updateCounts(){
-    var ta=0,tb=0,tq=0,found=false,orde=[],per={};
+    var ta=0,tb=0,found=false,orde=[],per={};
     out.querySelectorAll('tr[data-kl]').forEach(function(tr){
       found=true;
       var k=tr.getAttribute('data-kl')||'';
-      if(!(k in per)){per[k]={naam:k,n:0,a:0,b:0,q:0};orde.push(k)}
+      if(!(k in per)){per[k]={naam:k,n:0,a:0,b:0};orde.push(k)}
       per[k].n++;
       var c6=tr.querySelector('.f6'),c65=tr.querySelector('.f65');
       if(c6&&c6.checked){per[k].a++;ta++}
       if(c65&&c65.checked){per[k].b++;tb++}
-      var cq=tr.querySelector('.fq');
-      if(cq&&cq.checked){per[k].q++;tq++}
     });
     orde.sort(function(x,y){return x.localeCompare(y,'nl',{sensitivity:'base'})});
     var rij=orde.map(function(k){return per[k]}),thus=0;
@@ -575,28 +558,20 @@ async function sbRest(path,opt){
     $('palsums').hidden=!anyPin;
     n6El.textContent=found?String(ta):'–';
     n65El.textContent=found?String(tb):'–';
-    nqEl.textContent=found?String(tq):'–';
-    SUM={rij:rij,hus:thus,a:ta,b:tb,q:tq,pal:ps};
+    SUM={rij:rij,hus:thus,a:ta,b:tb,pal:ps};
   }
   function onField(e){
     var tr=e.target.closest('tr[data-hu]');if(!tr) return;
-    var hu=tr.getAttribute('data-hu'),s=state[hu]||(state[hu]={}),cl=e.target.classList;
-    if(cl.contains('st')) s.t=e.target.value;
-    else if(cl.contains('pick')) s.to=e.target.value;
-    else if(cl.contains('f6')||cl.contains('f65')||cl.contains('fok')||cl.contains('fq')){
-      /* Maar 1 keuze per HU: 6m, 6.5m (of gezien) of ? */
-      if(e.target.checked){
-        tr.querySelectorAll('input.f6,input.f65,input.fok,input.fq').forEach(function(i){if(i!==e.target) i.checked=false});
-      }
-      var g=function(c){var i=tr.querySelector(c);return !!(i&&i.checked)};
-      s.a=g('.f6');s.b=g('.f65');s.ok=g('.fok');s.q=g('.fq');
-      tr.classList.toggle('nf',s.q);
-    }
-    else if(cl.contains('pin')) s[e.target.getAttribute('data-f')]=e.target.value;
+    var hu=tr.getAttribute('data-hu'),s=state[hu]||(state[hu]={});
+    if(e.target.classList.contains('st')) s.t=e.target.value;
+    else if(e.target.classList.contains('f6')) s.a=e.target.checked;
+    else if(e.target.classList.contains('f65')) s.b=e.target.checked;
+    else if(e.target.classList.contains('fok')) s.ok=e.target.checked;
+    else if(e.target.classList.contains('pin')) s[e.target.getAttribute('data-f')]=e.target.value;
     saveState();
-    if(cl.contains('st')||cl.contains('pick')){
+    if(e.target.classList.contains('st')){
       render();
-      var again=out.querySelector('tr[data-hu="'+(window.CSS&&CSS.escape?CSS.escape(hu):hu)+'"] select.'+(cl.contains('st')?'st':'pick'));
+      var again=out.querySelector('tr[data-hu="'+(window.CSS&&CSS.escape?CSS.escape(hu):hu)+'"] select.st');
       if(again) again.focus();
       return;
     }
@@ -670,7 +645,6 @@ async function sbRest(path,opt){
       s1wEl.textContent='–';
       n6El.textContent='–';
       n65El.textContent='–';
-      nqEl.textContent='–';
       out.innerHTML='<div class="empty">Kies hierboven een route om te controleren.</div>';
       count.textContent='';copyBtn.disabled=true;return;
     }
@@ -691,7 +665,7 @@ async function sbRest(path,opt){
       count.textContent='';copyBtn.disabled=true;return;
     }
     var bytime=sortMode==='tijd',cs=bytime?6:5;
-    var h='<table><thead><tr><th>#</th><th>Stillage type</th><th>User</th>'+(bytime?'<th>Gewijzigd</th>':'')+'<th class="r">Total weight</th><th>Code &middot; klant</th><th class="c">6m</th><th class="c">6.5m</th><th class="c" title="Niet gevonden">?</th></tr></thead><tbody>';
+    var h='<table><thead><tr><th>#</th><th>Stillage type</th><th>User</th>'+(bytime?'<th>Gewijzigd</th>':'')+'<th class="r">Total weight</th><th>Code &middot; klant</th><th class="c">6m</th><th class="c">6.5m</th></tr></thead><tbody>';
     /* Eén doorlopende lijst: de controlecode is wat je zoekt, de klant staat er klein onder. */
     var idx={};
     p.hus.forEach(function(hu,i){idx[hu]=i});
@@ -701,26 +675,6 @@ async function sbRest(path,opt){
     function codeVan(hu){
       var end=hu.length-skip,start=end-take;
       return start<0?hu:hu.slice(start,end);
-    }
-    /* S0 toewijzen aan een S1: enkel de S1's van dezelfde klant, 1 keuze per S0. */
-    var s1by={},toS1={};
-    function nk(k){return String(k||'Geen klant').trim().replace(/\s+/g,' ').toLowerCase()}
-    p.hus.forEach(function(hu){
-      if(effType(hu)==='S1'){var k=nk(p.customers[hu]);(s1by[k]||(s1by[k]=[])).push(hu)}
-    });
-    p.hus.forEach(function(hu){
-      var s=state[hu];
-      if(effType(hu)==='S0'&&s&&s.to) (toS1[s.to]||(toS1[s.to]=[])).push(codeVan(hu));
-    });
-    function pickHtml(hu,code,klant,sel){
-      var lst=s1by[nk(klant)]||[],o='<option value="">– kies S1 –</option>',found=false;
-      lst.forEach(function(h2){
-        var on=h2===sel;if(on) found=true;
-        o+='<option value="'+esc(h2)+'"'+(on?' selected':'')+'>'+esc(codeVan(h2))+'</option>';
-      });
-      if(sel&&!found) o+='<option value="'+esc(sel)+'" selected>'+esc(codeVan(sel))+' (geen S1 meer)</option>';
-      return '<div class="s0to"><span>In S1</span><select class="pick" aria-label="S1 voor S0 '+esc(code)+'">'+o+'</select>'
-        +(lst.length||sel?'':'<span>geen S1 bij deze klant</span>')+'</div>';
     }
     var lijst=p.hus.slice();
     if(bytime){
@@ -755,7 +709,7 @@ async function sbRest(path,opt){
       if(item.title){
         var dicht=toeIs(item.sec);
         h+='<tr class="sub'+(dicht?' toe':'')+'" data-sec="'+esc(item.sec)+'">'
-          +'<td colspan="'+(cs+3)+'"><button type="button" class="vouw" aria-expanded="'+(dicht?'false':'true')
+          +'<td colspan="'+(cs+2)+'"><button type="button" class="vouw" aria-expanded="'+(dicht?'false':'true')
           +'" aria-label="'+esc(item.title)+' open- of dichtklappen"><span class="pijl"></span>'+esc(item.title)
           +'<span class="gc">'+item.sub+' HU\'s</span></button></td></tr>';
         return;
@@ -765,23 +719,19 @@ async function sbRest(path,opt){
       var end=hu.length-skip,start=end-take;
       var klant=p.customers[hu]||'Geen klant';
       if(start<0){
-        h+='<tr class="bad'+(toeIs(sec)?' weg':'')+'" data-sec="'+esc(sec)+'" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td><td colspan="'+(cs-2)+'">Te kort voor de regel hierboven</td><td class="hu">'+esc(hu)+'</td><td class="c" colspan="3"></td></tr>';
+        h+='<tr class="bad'+(toeIs(sec)?' weg':'')+'" data-sec="'+esc(sec)+'" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td><td colspan="'+(cs-2)+'">Te kort voor de regel hierboven</td><td class="hu">'+esc(hu)+'</td><td class="c" colspan="2"></td></tr>';
         return;
       }
       var code=hu.slice(start,end),s=state[hu]||{};
       codes.push(code);
-      var rc=(toeIs(sec)?'weg':'')+(s.q?' nf':'');
-      h+='<tr'+(rc?' class="'+rc.trim()+'"':'')+' data-hu="'+esc(hu)+'" data-sec="'+esc(sec)+'" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td>'
+      h+='<tr'+(toeIs(sec)?' class="weg"':'')+' data-hu="'+esc(hu)+'" data-sec="'+esc(sec)+'" data-kl="'+esc(klant)+'"><td class="n">'+n+'</td>'
         +'<td class="ty">'+typeSelect(code,effType(hu),p.types[hu]||'')+'</td>'
         +'<td class="u" title="'+esc(p.users[hu]||'')+'">'+esc(userName(p.users[hu]))+'</td>'
         +(bytime?'<td class="chg">'+esc(chgText(p.changed[hu]))+'</td>':'')
         +'<td class="r">'+(p.weights[hu]?esc(p.weights[hu])+' kg':'–')+'</td>'
         +'<td class="hu"><span class="code">'+esc(code)+'</span>'
           +'<small class="kl">'+esc(klant)+'</small>'
-          +'<small class="vol">'+esc(hu.slice(0,start))+'<mark>'+esc(code)+'</mark>'+esc(hu.slice(end))+'</small>'
-          +(isLoose(hu)?pickHtml(hu,code,klant,s.to):'')
-          +(toS1[hu]?'<div class="s0to"><span>S0 erin:</span><b>'+esc(toS1[hu].join(', '))+'</b></div>':'')
-          +'</td>'
+          +'<small class="vol">'+esc(hu.slice(0,start))+'<mark>'+esc(code)+'</mark>'+esc(hu.slice(end))+'</small></td>'
         +lastCells(hu,code,s,isPiece(hu)?'piece':(isLoose(hu)?'loose':''))+'</tr>';
     });
     out.innerHTML=h+'</tbody></table>';
@@ -808,7 +758,7 @@ async function sbRest(path,opt){
   var KOPKEY='dockcontrole-kop',kop={};
   try{kop=JSON.parse(localStorage.getItem(KOPKEY)||'{}')||{}}catch(e){kop={}}
   function saveKop(){try{localStorage.setItem(KOPKEY,JSON.stringify(kop))}catch(e){}}
-  function autoDock(v){dockEl.value=v||''}
+  function autoDock(v){if(!kop.d) dockEl.value=v||''}
   /* Dock en TU mee leegmaken met de knop Veld leegmaken. */
   function clearKop(){
     kop.d='';kop.t='';kop.x='';kop.xt='';
@@ -823,8 +773,8 @@ async function sbRest(path,opt){
     return v.length>2?v.slice(0,2)+'/'+v.slice(2):v;
   }
   var tuEl=$('tu');
-  dockEl.value='';
-  tuEl.value='';
+  dockEl.value=kop.d||'';
+  tuEl.value=kop.t||'';
   dockEl.addEventListener('input',function(){kop.d=dockEl.value.trim();saveKop()});
   /* Crossdock: stillage type, lengtes en paletten, naast het vrije tekstvak. */
   var XF=[['x6','6m'],['x65','6.5m'],['xpe','Europalet 80×120'],['xpb','Blokpalet 120×120'],['xpg','Gasket 80×80'],['xpd','Dozen']];
@@ -876,18 +826,18 @@ async function sbRest(path,opt){
     var d=dockEl.value.trim(),t=tuEl.value.trim();
     $('sumkop').innerHTML='<span><span class="k">Dock</span> <b>'+esc(d||'–')+'</b></span>'
       +'<span><span class="k">TU</span> <b>'+esc(t||'–')+'</b></span>';
-    var h='<table><thead><tr><th>Klant</th><th class="num">HU\'s</th><th class="num">6m</th><th class="num">6.5m</th><th class="num">?</th></tr></thead><tbody>';
+    var h='<table><thead><tr><th>Klant</th><th class="num">HU\'s</th><th class="num">6m</th><th class="num">6.5m</th></tr></thead><tbody>';
     SUM.rij.forEach(function(r){
-      h+='<tr><td class="kl">'+esc(r.naam)+'</td><td class="num">'+r.n+'</td><td class="num">'+r.a+'</td><td class="num">'+r.b+'</td><td class="num">'+r.q+'</td></tr>';
+      h+='<tr><td class="kl">'+esc(r.naam)+'</td><td class="num">'+r.n+'</td><td class="num">'+r.a+'</td><td class="num">'+r.b+'</td></tr>';
     });
     /* Crossdock telt mee zodra er iets is ingevuld. */
     function xn(k){var v=parseInt(kop[k],10);return isNaN(v)||v<0?0:v}
     var xa=xn('x6'),xb=xn('x65'),xp={pe:xn('xpe'),pb:xn('xpb'),pg:xn('xpg'),pd:xn('xpd')};
     var xTot=xa+xb,xPal=xp.pe+xp.pb+xp.pg+xp.pd;
     if(xTot||xPal){
-      h+='<tr class="xd"><td class="kl">Crossdock</td><td class="num">'+xTot+'</td><td class="num">'+xa+'</td><td class="num">'+xb+'</td><td class="num">0</td></tr>';
+      h+='<tr class="xd"><td class="kl">Crossdock</td><td class="num">'+xTot+'</td><td class="num">'+xa+'</td><td class="num">'+xb+'</td></tr>';
     }
-    h+='<tr class="tot"><td class="kl">Totaal</td><td class="num">'+(SUM.hus+xTot)+'</td><td class="num">'+(SUM.a+xa)+'</td><td class="num">'+(SUM.b+xb)+'</td><td class="num">'+SUM.q+'</td></tr>';
+    h+='<tr class="tot"><td class="kl">Totaal</td><td class="num">'+(SUM.hus+xTot)+'</td><td class="num">'+(SUM.a+xa)+'</td><td class="num">'+(SUM.b+xb)+'</td></tr>';
     $('sumtab').innerHTML=h+'</tbody></table>';
     var q=SUM.pal,p={pe:q.pe+xp.pe,pb:q.pb+xp.pb,pg:q.pg+xp.pg,pd:q.pd+xp.pd};
     $('sumpal').innerHTML='<div class="sum"><span class="k">Europalet 80×120</span><span class="v3">'+p.pe+'</span></div>'
@@ -975,8 +925,6 @@ async function sbRest(path,opt){
       if(x.a) st.a=true;
       if(x.b) st.b=true;
       if(x.ok) st.ok=true;
-      if(x.q) st.q=true;
-      if(x.to) st.to=x.to;
       ['pe','pb','pg','pd'].forEach(function(k){if(x[k]) st[k]=x[k]});
       if(x.type!==undefined&&x.type!==x.type_export) st.t=x.type;
       if(Object.keys(st).length) state[x.hu]=st;
@@ -1021,32 +969,14 @@ async function sbRest(path,opt){
     bewaar();
     info('Alles leeggemaakt.','ok');
   });
-  /* Pagina helemaal leeg: route, vinkjes, dock, TU en crossdock. */
-  function leegPagina(){
-    clearTimeout(wacht);wacht=null;opnieuw=false;
+  $('sluit').addEventListener('click',function(){
+    clearTimeout(wacht);
     ROW=null;state={};saveState();
     tuEl.value='';dockEl.value='';
-    kop.d='';kop.t='';kop.xt='';['x6','x65','xpe','xpb','xpg','xpd'].forEach(function(k){kop[k]=''});kop.x='';
+    kop.xt='';['x6','x65','xpe','xpb','xpg','xpd'].forEach(function(k){kop[k]=''});kop.x='';
     saveKop();fillXdrow();
     var x=$('xd');x.value='';x.style.height='';
-    render();toonLijst();
-  }
-  /* Wacht tot een lopende bewaring klaar is, zodat er niets verloren gaat. */
-  async function spoel(){
-    clearTimeout(wacht);wacht=null;
-    while(bezig) await new Promise(function(r){setTimeout(r,80)});
-  }
-  $('sluit').addEventListener('click',async function(){
-    if(ROW){await spoel();await bewaar()}
-    leegPagina();info('');
-  });
-  /* De docklocatie is aanpasbaar en wordt mee bewaard in de database. */
-  dockEl.addEventListener('input',function(){
-    dockEl.value=dockEl.value.toUpperCase();
-    if(!ROW) return;
-    ROW.dock=dockEl.value.trim();
-    LIJST.forEach(function(x){if(x.tu===ROW.tu) x.dock=ROW.dock});
-    bewaarStraks();
+    render();info('');toonLijst();
   });
 
   /* ---- terugsturen naar de database ---- */
@@ -1056,40 +986,28 @@ async function sbRest(path,opt){
       var s=state[x.hu]||{},n={};
       for(var k in x) n[k]=x[k];
       n.type=(s.t!==undefined?s.t:(x.type_export||''));
-      n.a=s.a?1:0;n.b=s.b?1:0;n.ok=s.ok?1:0;n.q=s.q?1:0;n.to=s.to||'';
+      n.a=s.a?1:0;n.b=s.b?1:0;n.ok=s.ok?1:0;
       n.pe=s.pe||'';n.pb=s.pb||'';n.pg=s.pg||'';n.pd=s.pd||'';
       return n;
     });
   }
-  /* Een HU is gekeurd zodra er een keuze is: 6m, 6.5m, ? (niet gevonden), gezien (S0) of paletten/dozen (stukgoed). */
-  function heeftKeuze(n){
-    var t=n.type||'';
-    if(n.q) return true;
-    if(t==='S0') return !!n.ok;
-    if(/^[BP]/i.test(t)) return ['pe','pb','pg','pd'].some(function(k){return String(n[k]==null?'':n[k]).trim()!==''});
-    return !!(n.a||n.b);
-  }
-  function zonderKeuze(lijst){return lijst.filter(function(n){return !heeftKeuze(n)}).length}
   var bezig=false,opnieuw=false,wacht=null;
   async function bewaar(extra){
-    if(!ROW) return false;
-    if(bezig){opnieuw=true;return false}
+    if(!ROW) return;
+    if(bezig){opnieuw=true;return}
     bezig=true;
     var tu=ROW.tu;
-    var lijst=huLijst();
-    var body={hus:lijst,volledig_gekeurd:(lijst.length>0&&zonderKeuze(lijst)===0),dock:(dockEl.value.trim()||null),crossdock:{t:kop.xt||'',a:kop.x6||'',b:kop.x65||'',pe:kop.xpe||'',pb:kop.xpb||'',pg:kop.xpg||'',pd:kop.xpd||'',tekst:kop.x||''}};
+    var body={hus:huLijst(),crossdock:{t:kop.xt||'',a:kop.x6||'',b:kop.x65||'',pe:kop.xpe||'',pb:kop.xpb||'',pg:kop.xpg||'',pd:kop.xpd||'',tekst:kop.x||''}};
     if(extra) for(var k in extra) body[k]=extra[k];
     try{
       await sbRest('dock_routes?tu=eq.'+encodeURIComponent(tu),{method:'PATCH',headers:{Prefer:'return=minimal'},body:body});
       if(ROW&&ROW.tu===tu){
-        ROW.hus=body.hus;ROW.dock=body.dock;
+        ROW.hus=body.hus;
         if(extra&&extra.status) ROW.status=extra.status;
       }
       if(!extra) info('Bewaard om '+new Date().toLocaleTimeString('nl-BE',{hour:'2-digit',minute:'2-digit'})+'.','ok');
-      return true;
     }catch(e){
       info(praat(e,'bewaren mislukt')+(e&&e.status===401?' Nog niets bewaard.':''),'err');
-      return false;
     }finally{
       bezig=false;
       if(opnieuw){opnieuw=false;bewaar()}
@@ -1105,15 +1023,10 @@ async function sbRest(path,opt){
 
   $('klaar').addEventListener('click',async function(){
     if(!ROW){info('Kies eerst een route.','err');return}
-    var tu=ROW.tu,mis=zonderKeuze(huLijst());
-    if(!confirm((mis?'LET OP: bij '+mis+' van de '+huLijst().length+' HU\'s is nog niets aangeduid (6m, 6.5m, ?, gezien of paletten).\nDe route wordt dan NIET als volledig gekeurd gemarkeerd.\n\n':'')
-      +'Controle van TU '+tu+' afronden?\n\nDe gegevens worden bewaard in de database en de TU wordt op afgewerkt gezet. '
-      +'Daarna worden alle velden op deze pagina leeggemaakt.\n\nWil je eerst nog de PDF exporteren? Annuleer dan en doe dat eerst.')) return;
-    await spoel();
-    var ok=await bewaar({status:'klaar',gecontroleerd_op:new Date().toISOString(),gecontroleerd_door:wie()});
-    if(!ok) return;      /* bewaren mislukt: niets leegmaken, de foutmelding staat al in beeld */
-    leegPagina();
-    info('Controle van TU '+tu+' afgerond; de velden zijn leeggemaakt.','ok');
+    clearTimeout(wacht);wacht=null;
+    var tu=ROW.tu;
+    await bewaar({status:'klaar',gecontroleerd_op:new Date().toISOString(),gecontroleerd_door:wie()});
+    info('Controle van TU '+tu+' afgerond.','ok');
     haalLijst();
   });
 
