@@ -1,0 +1,1040 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dockcontrole</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&family=Barlow+Condensed:wght@600;700&display=swap">
+<style>
+/* Layout: smalle werkkolom. Plakveld bovenaan, daaronder het dock groot en de HU-codes in een lijst. */
+:root{
+  --bg:#eef1f4;
+  --surface:#ffffff;
+  --ink:#1b2733;
+  --muted:#5d6b79;
+  --line:#d5dce3;
+  --accent:#2f6fb3;
+  --accent-ink:#ffffff;
+  --accent-soft:#e6eef7;
+  --sub-bg:#c6d8e9;
+  --chip-bg:rgba(255,255,255,.8);
+  --chip-ink:#000000;
+  --label-bg:#0b0b0b;
+  --label-fg:#ffffff;
+  --mark:#ffe08a;
+  --mark-ink:#3a2a00;
+  --ok:#1f7a45;
+  --bad:#b3261e;
+  --warn:#a35f00;
+  --warn-soft:#fdf0d8;
+  --font-display:"Barlow Condensed","Arial Narrow",sans-serif;
+  --font-body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --font-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#10171e;--surface:#18222c;--ink:#e6ecf2;--muted:#93a1af;--line:#2c3947;
+    --accent:#5aa4ec;--accent-ink:#0c1a28;--accent-soft:#1a3149;
+    --sub-bg:#0e2338;--mark:#8a6a12;--mark-ink:#fff3cf;
+    --ok:#5cc489;--bad:#f2857d;--warn:#f0b560;--warn-soft:#3a2d12;color-scheme:dark;
+  }
+  :root:not([data-theme="light"]) button.print{background:#e8bc84;border-color:#c08c45;color:#2b1a02}
+  :root:not([data-theme="light"]) button.print:hover{background:#f0cb9b;color:#2b1a02}
+  :root:not([data-theme="light"]) button.blue{background:#a9c9e6;border-color:#6f9cc4;color:#0b2033}
+  :root:not([data-theme="light"]) button.blue:hover{background:#bcd7ef;color:#0b2033}
+}
+:root[data-theme="dark"]{
+  --bg:#10171e;--surface:#18222c;--ink:#e6ecf2;--muted:#93a1af;--line:#2c3947;
+  --accent:#5aa4ec;--accent-ink:#0c1a28;--accent-soft:#1a3149;
+  --sub-bg:#0e2338;--mark:#8a6a12;--mark-ink:#fff3cf;
+  --ok:#5cc489;--bad:#f2857d;--warn:#f0b560;--warn-soft:#3a2d12;color-scheme:dark;
+}
+:root[data-theme="dark"] button.print{background:#e8bc84;border-color:#c08c45;color:#2b1a02}
+:root[data-theme="dark"] button.print:hover{background:#f0cb9b;color:#2b1a02}
+:root[data-theme="dark"] button.blue{background:#a9c9e6;border-color:#6f9cc4;color:#0b2033}
+:root[data-theme="dark"] button.blue:hover{background:#bcd7ef;color:#0b2033}
+*{box-sizing:border-box}
+@page{size:A4 portrait;margin:8mm}
+html.printing{--bg:#fff;--surface:#fff;--ink:#000;--muted:#444;--line:#999}
+html.printing .noprint,html.printing #badge,html.printing #count,html.printing #copy,html.printing #rule,html.printing p.sub,html.printing section[aria-labelledby="h-plak"]{display:none!important}
+html.printing .panel{border:0;padding:0}
+html.printing .tablewrap{overflow:visible}
+html.printing select.st{-webkit-appearance:none;appearance:none;border:0;background:none;padding:0;min-width:0;width:auto;color:#000;font-weight:500}
+html.printing th,html.printing td{padding:2px 8px}
+html.printing tr.grp td{padding:4px 8px}
+html.printing tr.grp b{font-size:1.15rem}
+html.printing tr.sub td{padding:1px 8px}
+html.printing td.code small{display:none}
+html.printing td.hu small,html.printing .code small{display:none}
+html.printing .panel{gap:8px}
+html.printing .wrap{gap:10px}
+html.printing h1{font-size:1.8rem}
+html.printing .logo{height:40px}
+html.printing body{padding:0;background:#fff}
+/* Max 2 bladzijden, recto verso: nette paginaovergang. */
+html.printing thead{display:table-header-group}
+html.printing tr{break-inside:avoid;page-break-inside:avoid}
+html.printing tr.grp,html.printing tr.sub{break-after:avoid;page-break-after:avoid}
+html.printing section[aria-labelledby="h-tot"],html.printing section[aria-labelledby="h-xd"]{break-inside:avoid;page-break-inside:avoid}
+html.printing textarea.xd{background:#fff;border-color:#999;color:#000;resize:none}
+html.printing .wrap{width:var(--pw,730px);max-width:none;margin:0;zoom:var(--ps,1)}
+@media print{
+  :root,:root[data-theme="dark"],:root:not([data-theme="light"]){
+    --bg:#fff;--surface:#fff;--ink:#000;--muted:#444;--line:#999;
+    --accent:#2f6fb3;--accent-ink:#fff;--accent-soft:#e6eef7;--sub-bg:#c6d8e9;
+    --mark:#ffe08a;--mark-ink:#3a2a00;color-scheme:light;
+  }
+  *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+  body{padding:0;background:#fff;overflow:hidden}
+}
+.pdfbar{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
+body{
+  background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;
+  padding-block:24px 48px;
+  padding-left:max(16px,env(safe-area-inset-left,0px));
+  padding-right:max(16px,env(safe-area-inset-right,0px));
+}
+.wrap{max-width:1120px;margin:0 auto;display:flex;flex-direction:column;gap:20px}
+header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:8px 24px}
+h1{font-family:var(--font-display);font-weight:700;font-size:2.4rem;line-height:1;margin:0;letter-spacing:.01em;text-transform:uppercase;text-wrap:balance}
+.sub{color:var(--muted);margin:6px 0 0}
+.brand{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.logo{height:56px;width:auto;border-radius:3px;display:block}
+.stamp{font-family:var(--font-mono);font-size:.85rem;color:var(--muted);text-align:right}
+.stamp b{display:block;color:var(--ink);font-weight:500;font-size:1rem}
+
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:18px;display:flex;flex-direction:column;gap:14px;min-width:0}
+.panel h2{font-family:var(--font-display);font-size:1.25rem;text-transform:uppercase;letter-spacing:.04em;margin:0;font-weight:600}
+.row{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+.row.between{justify-content:space-between}
+
+label.lbl{font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:500}
+textarea{
+  width:100%;min-height:130px;resize:vertical;padding:14px;
+  border:2px dashed var(--line);border-radius:6px;background:var(--bg);color:var(--ink);
+  font-family:var(--font-mono);font-size:.85rem;line-height:1.5;
+}
+textarea::placeholder{color:var(--muted)}
+textarea:hover{border-color:var(--accent)}
+textarea:focus{outline:3px solid var(--accent-soft);border-color:var(--accent);border-style:solid;background:var(--surface)}
+textarea.hot{border-color:var(--ok);border-style:solid}
+textarea.xd{min-height:96px;border-style:solid;border-width:1px;background:var(--surface);font-family:var(--font-body);font-size:.95rem;padding:10px 12px;overflow:hidden}
+
+button{
+  font:inherit;font-weight:500;padding:8px 14px;border-radius:5px;cursor:pointer;
+  border:1px solid var(--line);background:var(--surface);color:var(--ink);
+}
+button:hover{border-color:var(--accent);color:var(--accent)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+button.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+button.primary:hover{filter:brightness(1.08);color:var(--accent-ink)}
+/* De afdrukknoppen in het licht oranje. */
+button.print{background:#fde3bf;border-color:#e3a85f;color:#5a3708}
+button.print:hover{background:#fbd4a2;border-color:#c98a3c;color:#4a2d05}
+/* Samenvatting: enkel zichtbaar op de export onderaan. */
+/* Database-sectie en de knoppenbalk om te versturen. */
+.dbrow{display:flex;gap:12px;align-items:flex-end;flex-wrap:wrap}
+.dbrow .fld{flex:0 1 230px}
+.dbstate{font-family:var(--font-mono);font-size:.8rem;color:var(--muted);display:flex;align-items:center;gap:7px}
+.dbstate i{width:9px;height:9px;border-radius:50%;background:var(--muted);display:inline-block}
+.dbstate.on i{background:var(--ok)}
+.sbinfo{font-family:var(--font-mono);font-size:.82rem;color:var(--muted);text-align:right}
+.sbinfo.err{color:var(--bad)}
+.sbinfo.ok{color:var(--ok)}
+.syncbar{margin-top:4px}
+html.printing section[aria-labelledby="h-db"],html.onlysum section[aria-labelledby="h-db"]{display:none!important}
+/* Crossdock: eigen regel met type, lengtes en paletten. */
+.xdrow{display:flex;gap:10px 14px;flex-wrap:wrap;align-items:flex-end}
+.xdrow label{display:flex;flex-direction:column;gap:2px}
+.xdrow .pd{font-size:.66rem;line-height:1.1;color:var(--muted);white-space:nowrap;text-transform:uppercase;letter-spacing:.05em}
+.xdrow select.st{min-width:200px;width:auto}
+.sumonly{display:none}
+html.onlysum .sumonly{display:flex}
+html.onlysum section[aria-labelledby="h-plak"],html.onlysum section[aria-labelledby="h-prev"],html.onlysum section[aria-labelledby="h-tot"],html.onlysum section[aria-labelledby="h-xd"]{display:none!important}
+#sumsec .kop{display:flex;gap:28px;align-items:baseline;flex-wrap:wrap;font-family:var(--font-mono);font-size:.95rem}
+#sumsec .kop b{font-family:var(--font-display);font-size:1.6rem;letter-spacing:.02em}
+#sumsec td.kl{font-family:var(--font-display);font-size:1.15rem;font-weight:600;text-transform:uppercase;letter-spacing:.02em;white-space:normal}
+#sumsec td.num,#sumsec th.num{text-align:right;font-family:var(--font-mono);width:1%;padding-inline:22px}
+#sumsec tr.xd td{background:var(--accent-soft)}
+#sumsec td.kl small{display:block;font-family:var(--font-mono);font-size:.7rem;font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted)}
+#sumsec tr.tot td{border-top:2px solid var(--ink);border-bottom:0;font-weight:700;background:var(--accent-soft)}
+#sumsec tr.tot td.num{font-family:var(--font-display);font-size:1.35rem}
+/* De exportknop onderaan in het lichtblauw. */
+button.blue{background:#d6e7f7;border-color:#8fb9de;color:#10385c}
+button.blue:hover{background:#c2dcf3;border-color:#5e97c9;color:#0b2b47}
+
+.cfg{display:flex;flex-wrap:wrap;gap:10px 24px;align-items:center}
+.cfg label{display:inline-flex;align-items:center;gap:8px}
+.cfg input{width:64px;padding:6px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font-family:var(--font-mono);font-size:.95rem}
+
+.pill{display:inline-block;font-size:.75rem;font-weight:600;padding:2px 9px;border-radius:99px;letter-spacing:.03em}
+.pill.ex{background:var(--warn-soft);color:var(--warn)}
+.pill.live{background:var(--accent-soft);color:var(--accent)}
+.count{font-family:var(--font-mono);font-size:.85rem;color:var(--muted)}
+
+.dock{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line);padding-bottom:12px}
+.dock .k,.sums .k{font-size:.8rem;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);font-weight:500}
+.dock .v{font-family:var(--font-display);font-weight:700;font-size:3.2rem;line-height:1;text-transform:uppercase;overflow-wrap:anywhere}
+
+.dock{align-items:flex-end;gap:12px 28px}
+.dock .fld{display:flex;flex-direction:column;gap:2px;cursor:text}
+input.big{font-family:var(--font-display);font-weight:700;font-size:2.4rem;line-height:1.1;text-transform:uppercase;letter-spacing:.02em;color:var(--ink);background:transparent;border:0;border-bottom:2px solid var(--line);border-radius:0;padding:0 4px;min-width:0}
+input.big::placeholder{color:var(--muted);opacity:.55}
+input.big:hover{border-bottom-color:var(--accent)}
+input.big:focus{outline:0;border-bottom-color:var(--accent);background:var(--accent-soft)}
+#dock{width:5.2rem}
+#tu{width:11.5rem}
+.dock .tot{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.dock .v2{font-family:var(--font-display);font-weight:700;font-size:2rem;line-height:1;letter-spacing:.01em;white-space:nowrap}
+tr.grp td.gcnt{text-align:center;padding-inline:18px}
+.chip{display:inline-block;min-width:2.2rem;background:var(--chip-bg);color:var(--chip-ink);padding:1px 8px;border-radius:3px;font-family:var(--font-mono)}
+.chip i{font-style:normal;font-weight:700;font-size:.9rem;color:var(--chip-ink)}
+.sums{display:flex;flex-wrap:wrap;gap:12px 40px;align-items:flex-end}
+[hidden]{display:none!important}
+.sums2{border-top:1px solid var(--line);padding-top:14px}
+.sum{display:flex;flex-direction:column;gap:2px}
+.sum.end{margin-left:auto;align-items:flex-end}
+.v3{font-family:var(--font-display);font-weight:700;font-size:2rem;line-height:1;letter-spacing:.01em;white-space:nowrap}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:.9rem}
+th,td{text-align:left;padding:8px 12px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{background:var(--accent-soft);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.06em}
+td.n{font-family:var(--font-mono);color:var(--muted);width:1%}
+td.hu{font-family:var(--font-mono);color:var(--muted)}
+td.code{font-family:var(--font-mono);font-weight:500;font-size:1.05rem}
+td.chg{font-family:var(--font-mono);font-size:.82rem;color:var(--muted);white-space:nowrap}
+mark{background:var(--mark);color:var(--mark-ink);padding:1px 2px;border-radius:3px;font-weight:600}
+/* De code ziet eruit zoals op het label: witte cijfers op een zwarte balk. */
+td.hu .code{display:inline-block;background:var(--label-bg);color:var(--label-fg);font-family:Verdana,"DejaVu Sans",Geneva,sans-serif;font-weight:700;font-size:1rem;line-height:1.4;letter-spacing:.1em;padding:1px 10px 1px 12px;border-radius:2px;box-shadow:0 0 0 1px var(--line);font-variant-numeric:tabular-nums}
+td.hu small{display:block;margin-top:3px}
+td.hu small{font-size:.72rem;color:var(--muted)}
+td.hu mark{font-weight:500;padding:0 1px}
+select.st{width:100%;min-width:220px;padding:4px 8px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font:inherit}
+select.st:focus{background:var(--surface);border-color:var(--accent)}
+tr.grp td{background:var(--accent);color:var(--accent-ink);padding:10px 12px;border-bottom:1px solid var(--line)}
+tr.grp b{font-family:var(--font-display);font-size:1.5rem;font-weight:700;letter-spacing:.03em;text-transform:uppercase;line-height:1.1}
+tr.sub td{text-align:center;background:var(--sub-bg);padding:3px 12px;border-bottom:1px solid var(--line);font-family:var(--font-display);font-size:1.05rem;text-transform:uppercase;letter-spacing:.04em;color:var(--ink);font-weight:600;line-height:1.15}
+td.pcell{padding-block:6px}
+.palrow{display:flex;gap:8px;flex-wrap:nowrap}
+.palrow label{display:flex;flex-direction:column;gap:2px}
+.palrow .pd{font-size:.66rem;line-height:1.1;color:var(--muted);white-space:nowrap}
+.pin{width:4.4rem;padding:4px 6px;border:1px solid var(--line);border-radius:5px;background:var(--bg);color:var(--ink);font-family:var(--font-mono);font-size:.95rem;text-align:center}
+.pin:focus{background:var(--surface);border-color:var(--accent)}
+tr.sub .gc{margin-left:12px;font-family:var(--font-mono);font-size:.78rem;letter-spacing:0;text-transform:none;color:inherit;opacity:.75;font-weight:400}
+tr.grp .gc{margin-left:14px;background:var(--chip-bg);color:var(--chip-ink);padding:1px 8px;border-radius:3px;font-family:var(--font-mono);font-size:.72rem;font-weight:600;vertical-align:.25em}
+th.r,td.r{text-align:right;font-family:var(--font-mono)}
+th.r{font-family:var(--font-body)}
+td.u{font-family:var(--font-mono)}
+th.c,td.c{text-align:center;width:1%;padding-inline:18px}
+td.c input{width:22px;height:22px;accent-color:var(--accent);cursor:pointer;vertical-align:middle}
+tbody tr:last-child td{border-bottom:0}
+tbody tr:nth-child(even){background:color-mix(in srgb,var(--bg) 55%,transparent)}
+tr.bad td{color:var(--warn)}
+.empty{padding:28px;text-align:center;color:var(--muted)}
+.hint{color:var(--muted);font-size:.85rem;margin:0}
+kbd{font-family:var(--font-mono);font-size:.8rem;padding:1px 6px;border:1px solid var(--line);border-bottom-width:2px;border-radius:4px;background:var(--bg)}
+@media (prefers-reduced-motion:no-preference){textarea{transition:border-color .15s,background .15s}}
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div class="brand">
+      <img class="logo" alt="Deceuninck" width="207" height="80" src="data:image/png;base64,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">
+      <div>
+        <h1>Dockcontrole</h1>
+        <p class="sub">Plak de gegevens en lees per HU de controlecode af.</p>
+      </div>
+    </div>
+    <div class="stamp">Vandaag<b id="today">…</b></div>
+  </header>
+
+  <section class="panel noprint" aria-labelledby="h-db">
+    <div class="row between">
+      <h2 id="h-db">0. Database (work-sap)</h2>
+      <span class="dbstate" id="dbstate"><i></i><span>niet ingelogd</span></span>
+    </div>
+    <div class="dbrow" id="lgForm">
+      <label class="fld" for="lgMail"><span class="k">E-mail</span><input id="lgMail" type="email" autocomplete="username" spellcheck="false"></label>
+      <label class="fld" for="lgPw"><span class="k">Wachtwoord</span><input id="lgPw" type="password" autocomplete="current-password"></label>
+      <button type="button" class="primary" id="lgBtn">Inloggen</button>
+    </div>
+    <div class="row" id="lgOk" hidden><span class="sub">Ingelogd als <b id="lgWho"></b></span><button type="button" id="lgOut">Uitloggen</button></div>
+    <p class="sub" id="lgErr" hidden></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-plak">
+    <div class="row between">
+      <h2 id="h-plak">1. Gegevens plakken</h2>
+      <span class="hint">Klik in het veld en druk op <kbd>Ctrl</kbd> + <kbd>V</kbd></span>
+    </div>
+    <label class="lbl" for="paste">Plakveld</label>
+    <textarea id="paste" spellcheck="false" placeholder="Plak hier de rijen uit de export.&#10;De kolommen worden zelf herkend."></textarea>
+    <div class="row between">
+      <span></span>
+      <div class="row">
+        <button type="button" id="clear">Veld leegmaken</button>
+      </div>
+    </div>
+    <p class="hint" id="rule"></p>
+  </section>
+
+  <section class="panel" aria-labelledby="h-prev">
+    <div class="row between">
+      <h2 id="h-prev">2. Te controleren</h2>
+      <div class="row">
+        <span class="pill ex" id="badge">Voorbeeldgegevens</span>
+        <span class="count" id="count"></span>
+        <button type="button" id="copy">Codes kopiëren</button>
+      </div>
+    </div>
+    <div class="dock">
+      <label class="fld" for="dock"><span class="k">Dock</span><input class="big" id="dock" type="text" maxlength="8" placeholder="–" autocomplete="off" spellcheck="false"></label>
+      <label class="fld" for="tu"><span class="k">TU</span><input class="big" id="tu" type="text" maxlength="9" placeholder="../......" autocomplete="off" spellcheck="false"></label>
+    </div>
+    <div class="row between syncbar noprint">
+      <div class="row">
+        <button type="button" class="primary" id="sbsend">Naar controle sturen</button>
+        <button type="button" id="sbget">Controle ophalen</button>
+      </div>
+      <span class="sbinfo" id="sbinfo"></span>
+    </div>
+    <div class="tablewrap" id="out"></div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-tot">
+    <div class="row between">
+      <h2 id="h-tot">3. Totalen</h2>
+      <div class="row noprint">
+        <button type="button" class="print" id="pdftime">PDF op tijdstip</button>
+      </div>
+    </div>
+    <div class="sums">
+      <div class="sum"><span class="k">Aantal S1</span><span class="v3" id="s1n">–</span></div>
+      <div class="sum"><span class="k">6m</span><span class="v3" id="n6">–</span></div>
+      <div class="sum"><span class="k">6.5m</span><span class="v3" id="n65">–</span></div>
+      <div class="sum"><span class="k">Gewicht S1</span><span class="v3" id="s1w">–</span></div>
+      <div class="sum end"><span class="k">Totaal gewicht TU</span><span class="v3" id="total">–</span></div>
+    </div>
+    <div class="sums sums2" id="palsums" hidden>
+      <div class="sum"><span class="k">Europalet 80×120</span><span class="v3" id="tpe">0</span></div>
+      <div class="sum"><span class="k">Blokpalet 120×120</span><span class="v3" id="tpb">0</span></div>
+      <div class="sum"><span class="k">Gasket 80×80</span><span class="v3" id="tpg">0</span></div>
+      <div class="sum"><span class="k">Dozen</span><span class="v3" id="tpd">0</span></div>
+      <div class="sum end"><span class="k">Totaal paletten</span><span class="v3" id="tpt">0</span></div>
+    </div>
+  </section>
+
+  <section class="panel" aria-labelledby="h-xd">
+    <h2 id="h-xd">4. Crossdock</h2>
+    <div class="xdrow" id="xdrow"></div>
+    <textarea id="xd" class="xd" spellcheck="false" placeholder="Vrij in te vullen."></textarea>
+    <div class="pdfbar noprint"><button type="button" class="blue" id="pdfbot">Exporteren als PDF</button></div>
+  </section>
+
+  <section class="panel sumonly" id="sumsec" aria-label="Samenvatting per klant">
+    <div class="kop" id="sumkop"></div>
+    <div class="tablewrap" id="sumtab"></div>
+    <div class="sums sums2" id="sumpal"></div>
+  </section>
+</div>
+
+<script>
+/* ---- Supabase work-sap: kleine client zonder bibliotheek (inloggen + REST) ----
+   Sessie in localStorage "worksap_sessie" — gedeeld door de WO-scanpagina en Outbound
+   (zelfde browser, bestanden lokaal geopend). */
+const SB={url:"https://xrqsvqwsotsoocfrplns.supabase.co",key:"sb_publishable_qrVQegKv235Uk1D9bHTFEg_MyGKyM1X",LS:"worksap_sessie"};
+function sbRead(){ try{ return JSON.parse(localStorage.getItem(SB.LS)||"null"); }catch(e){ return SB.mem||null; } }
+function sbWrite(s){ SB.mem=s; try{ if(s) localStorage.setItem(SB.LS,JSON.stringify(s)); else localStorage.removeItem(SB.LS); }catch(e){} }
+function sbKeep(j){ const s={access_token:j.access_token,refresh_token:j.refresh_token,expires_at:j.expires_at||Math.floor(Date.now()/1000)+(j.expires_in||3600),email:(j.user&&j.user.email)||(sbRead()||{}).email||""}; sbWrite(s); return s; }
+async function sbAuth(grant,body){
+  const r=await fetch(SB.url+"/auth/v1/token?grant_type="+grant,{method:"POST",headers:{apikey:SB.key,"Content-Type":"application/json"},body:JSON.stringify(body)});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok) throw new Error(j.error_description||j.msg||j.message||("inloggen mislukt ("+r.status+")"));
+  return sbKeep(j);
+}
+async function sbLogin(email,pw){ return sbAuth("password",{email:String(email).trim(),password:pw}); }
+async function sbLogout(){ const s=sbRead(); sbWrite(null);
+  if(s) try{ await fetch(SB.url+"/auth/v1/logout",{method:"POST",headers:{apikey:SB.key,Authorization:"Bearer "+s.access_token}}); }catch(e){} }
+let sbRefreshing=null;
+async function sbToken(force){
+  let s=sbRead(); if(!s) return null;
+  if(!force&&s.expires_at-90>Date.now()/1000) return s.access_token;
+  if(!sbRefreshing) sbRefreshing=(async()=>{
+    const cur=sbRead(); if(!cur) return null;
+    if(!force&&cur.expires_at-90>Date.now()/1000) return cur.access_token;      // andere pagina ververste al
+    try{ return (await sbAuth("refresh_token",{refresh_token:cur.refresh_token})).access_token; }
+    catch(e){ const again=sbRead(); if(again&&again.refresh_token!==cur.refresh_token) return again.access_token; sbWrite(null); return null; }
+  })().finally(()=>{ sbRefreshing=null; });
+  return sbRefreshing;
+}
+/* REST: pad zoals "wo_pool?select=*" — gooit een fout met .status bij een HTTP-fout */
+async function sbRest(path,opt){
+  opt=opt||{};
+  for(let poging=0;poging<2;poging++){
+    const tok=await sbToken(poging>0); if(!tok){ const e=new Error("niet ingelogd"); e.status=401; throw e; }
+    const h=Object.assign({apikey:SB.key,Authorization:"Bearer "+tok},opt.body!=null?{"Content-Type":"application/json"}:{},opt.headers||{});
+    const r=await fetch(SB.url+"/rest/v1/"+path,{method:opt.method||"GET",headers:h,body:opt.body!=null?JSON.stringify(opt.body):undefined});
+    if(r.status===401&&poging===0) continue;
+    const txt=await r.text(); let j=null; try{ j=txt?JSON.parse(txt):null; }catch(e){}
+    if(!r.ok){ const e=new Error((j&&(j.message||j.details))||("fout "+r.status)); e.status=r.status; e.code=j&&j.code; throw e; }
+    return j;
+  }
+}
+</script>
+<script>
+(function(){
+  var $=function(id){return document.getElementById(id)};
+  var ta=$('paste'),out=$('out'),badge=$('badge'),count=$('count'),dockEl=$('dock'),totalEl=$('total'),s1nEl=$('s1n'),s1wEl=$('s1w'),n6El=$('n6'),n65El=$('n65'),rule=$('rule'),copyBtn=$('copy');
+  var KEY='dockcontrole-plak';
+  var codes=[],LAST=null;
+
+  $('today').textContent=new Date().toLocaleDateString('nl-BE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+
+  /* Voorbeeld: ingevulde id's zijn verzonnen, alleen de opbouw (rij 1 dock, rij 2 HU's) is echt. */
+  var SAMPLE=[
+    '\tS3\t64057_0_0_0_0/IN big stillage\tD4\tOY#\tKlant A\t54010000403000111\t1260082932\t29.10.2026\t22:48:59\t662,412\t482,412\t29.10.2026',
+    '\tS1\t978_0_0_0_0/DEC big stillage\tD4\tOY#\tKlant A\t54010000403000228\t1260005714\t29.10.2026\t22:42:24\t705,696\t528,696\t29.10.2026',
+    '\tS1\t978_0_0_0_0/DEC big stillage\tD4\tBQ#\tKlant B\t54005531047000345\t1260005714\t29.10.2026\t14:46:30\t579,010\t402,010\t29.10.2026',
+    '\tB1\t74917_0_0_0_0/Box\tD4\t#2D\t\t54005531047000462\t1260500130\t29.10.2026\t08:45:40\t0,944\t0,944\t05.10.2026'].join('\n');
+
+  function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+  /* Volledige lijst Handling Unit Types uit pack_material.pdf. */
+  var TYPES=[
+    ['B1','Box'],['B3','Bundle 3PC'],['B5','Bundle 5PC'],['BB','Big bag - Super Sack'],
+    ['FB','Flow bin - Gaylord'],['GB','Gitterbox'],['OB','Octabin'],['P0','Unpacked on rack'],
+    ['P1','Pallet 80x80 (gasket)'],['P2','Other pallet'],['P3','Euro pallet'],['P4','One-way pallet'],
+    ['RR','Roll rack'],['S0','Loose in another Sx stillage'],['S1','DEC big stillage'],
+    ['S12','TR steel stillage'],['S13','DEC big stillage 3 compartments'],['S16','DEC big stillage 6 compartments'],
+    ['S2','DEC small stillage'],['S23','DEC small stillage 3 compartments'],['S26','DEC small stillage 6 compartments'],
+    ['S3','IN big stillage'],['S4','IN small stillage'],['S5','US AK'],['S51','VBP AK Cart'],
+    ['S52','DNA AK Cart'],['S53','DT (Dayton) AK Cart'],['S54','Half AK Cart'],['S55','CV Bundle'],
+    ['S56','Export Crate (US)'],['S57','Plastic Bundle (US)'],['S6','Master Cart (MK)'],
+    ['S7','Model Europe stillage'],['S8','Metal Stillage 4 Meter'],['TB','Tote bag - logistics'],
+    ['W1','DEC big wood crate'],['W2','DEC small wood crate'],['W3','IN big wood crate'],
+    ['W4','IN small wood crate'],['W5','WPC pallet ≥ 4,0m'],['W6','WPC pallet < 4,0m'],
+    ['W7','Wooden EU crate'],['W8','Wooden EU crate SF (high)'],['W9','Wooden EU crate SF (small)']
+  ];
+  /* Gebruikers uit de lijst Gebruikers_1.xlsx: de code wordt vervangen door de naam. */
+  var USERS={'BERAP':'Papiernik Rafal','#2D':'Gaytant Lorian','#3E':'Carrette Xavier','#3U':'Devoldere Bart','#IE':'Roets Johan','#NE':'Dedene Joost','B4#':'Nim Igor','BEDVJ':'Vanderjeugd Davy','BW#':'Callens Björn','CT#':'Meeuws Jurgen','O3#':'Bajrami Nazmi','O5#':'Vansevenant Ben','RFAB002023':'Bouchakour Adel','RFAL002819':'Lisiewicz Adam','RFEO005335':'Odent Eros','RFFG001204':'Ghigenescu Florin','RFGV002276':'Voinchet Gerard','RFJL005262':'Lottin Jens','RFKP059514':'Polechuk Kiril','RFMB059586':'Beelprez Marnick','RFMD012158':'Michael Damman','RFMD059374':'Delebois Mathias','RFMS004794':'Sadat Marjan','RFSM001237':'Safi Mohammad','RFTR004795':'Rezene Teklu','RFZS001796':'Sall Zakaria'};
+  function userName(u){
+    var k=(u||'').trim();
+    return k?(USERS[k.toUpperCase()]||k):'–';
+  }
+  function typeSelect(code,val,def){
+    var o='<option value="">–</option>',found=false;
+    TYPES.forEach(function(t){
+      var sel=t[0]===val;if(sel) found=true;
+      o+='<option value="'+t[0]+'"'+(sel?' selected':'')+'>'+t[0]+' · '+esc(t[1])+'</option>';
+    });
+    if(val&&!found) o+='<option value="'+esc(val)+'" selected>'+esc(val)+'</option>';
+    return '<select class="st" data-def="'+esc(def===undefined?(val||''):(def||''))+'" aria-label="Stillage type HU '+esc(code)+'">'+o+'</select>';
+  }
+  var SKEY='dockcontrole-velden',state={};
+  try{state=JSON.parse(localStorage.getItem(SKEY)||'{}')||{}}catch(e){state={}}
+  function saveState(){try{localStorage.setItem(SKEY,JSON.stringify(state))}catch(e){}}
+  /* Alles wat zelf is ingevuld terug op nul: vakjes 6m/6.5m, paletten, dozen en het stillage type. */
+  function resetVelden(){
+    state={};
+    try{localStorage.removeItem(SKEY)}catch(e){}
+    out.querySelectorAll('input.f6,input.f65').forEach(function(i){i.checked=false});
+    out.querySelectorAll('input.pin').forEach(function(i){i.value=''});
+    out.querySelectorAll('select.st').forEach(function(sel){sel.value=sel.getAttribute('data-def')||''});
+    updateCounts();
+  }
+  /* Stukgoed-HU's krijgen invulvelden in de plaats van de vakjes 6m en 6.5m. */
+  var PALF=[['pe','Europalet','80×120'],['pb','Blokpalet','120×120'],['pg','Gasket','80×80'],['pd','Dozen','']];
+  function lastCells(hu,code,s,kind){
+    if(kind==='loose') return '<td class="c" colspan="2"></td>';
+    if(kind!=='piece'){
+      return '<td class="c"><input class="f6" type="checkbox" aria-label="6m HU '+esc(code)+'"'+(s.a?' checked':'')+'></td>'
+        +'<td class="c"><input class="f65" type="checkbox" aria-label="6.5m HU '+esc(code)+'"'+(s.b?' checked':'')+'></td>';
+    }
+    return '<td class="pcell" colspan="2"><div class="palrow">'+PALF.map(function(f){
+      return '<label><span class="pd">'+f[1]+(f[2]?' '+f[2]:'')+'</span><input class="pin" type="number" min="0" step="1" inputmode="numeric" data-f="'+f[0]+'" aria-label="'+f[1]+' HU '+esc(code)+'" value="'+esc(s[f[0]]===undefined?'':s[f[0]])+'"></label>';
+    }).join('')+'</div></td>';
+  }
+  var SUM={rij:[],hus:0,a:0,b:0,pal:{pe:0,pb:0,pg:0,pd:0}};
+  function updateCounts(){
+    var grp=null,a=0,b=0,ta=0,tb=0,found=false,rij=[],thus=0;
+    function flush(){
+      if(!grp) return;
+      var x=grp.querySelector('.n6'),y=grp.querySelector('.n65');
+      if(x) x.textContent=a;
+      if(y) y.textContent=b;
+      var n=parseInt(grp.getAttribute('data-n'),10)||0;
+      thus+=n;
+      rij.push({naam:grp.getAttribute('data-naam')||'',n:n,a:a,b:b});
+    }
+    out.querySelectorAll('tr').forEach(function(tr){
+      if(tr.classList.contains('grp')){flush();grp=tr;a=0;b=0;found=true;return}
+      var c6=tr.querySelector('.f6'),c65=tr.querySelector('.f65');
+      if(c6&&c6.checked){a++;ta++}
+      if(c65&&c65.checked){b++;tb++}
+    });
+    flush();
+    /* Totaal paletten bij Stukgoed (som van de velden in de Stukgoed-rijen). */
+    var ps={pe:0,pb:0,pg:0,pd:0},anyPin=false;
+    out.querySelectorAll('.pin').forEach(function(inp){
+      anyPin=true;
+      var v=parseInt(inp.value,10),f=inp.getAttribute('data-f');
+      if(!isNaN(v)&&f in ps) ps[f]+=v;
+    });
+    $('tpe').textContent=ps.pe;
+    $('tpb').textContent=ps.pb;
+    $('tpg').textContent=ps.pg;
+    $('tpt').textContent=ps.pe+ps.pb+ps.pg;
+    $('tpd').textContent=ps.pd;
+    $('palsums').hidden=!anyPin;
+    n6El.textContent=found?String(ta):'–';
+    n65El.textContent=found?String(tb):'–';
+    SUM={rij:rij,hus:thus,a:ta,b:tb,pal:ps};
+  }
+  function onField(e){
+    var tr=e.target.closest('tr[data-hu]');if(!tr) return;
+    var hu=tr.getAttribute('data-hu'),s=state[hu]||(state[hu]={});
+    if(e.target.classList.contains('st')) s.t=e.target.value;
+    else if(e.target.classList.contains('f6')) s.a=e.target.checked;
+    else if(e.target.classList.contains('f65')) s.b=e.target.checked;
+    else if(e.target.classList.contains('pin')) s[e.target.getAttribute('data-f')]=e.target.value;
+    saveState();
+    if(e.target.classList.contains('st')){
+      render(ta.value,false);
+      var again=out.querySelector('tr[data-hu="'+(window.CSS&&CSS.escape?CSS.escape(hu):hu)+'"] select.st');
+      if(again) again.focus();
+      return;
+    }
+    updateCounts();
+  }
+
+  /* Vaste kolomindeling van de twee gekende exports, 0 = eerste kolom. */
+  var MAPNEW={ty:1,dock:3,user:4,cu:5,hu:6,cd:8,ct:9,w:10};
+  var MAPOLD={dock:0,hu:1,ty:2,w:7};
+  var RE={bin:/^([Aa][1-7]|[B-Fb-f][1-5])$/,hu:/^\d{8,}$/,date:/^\d{2}[.\/-]\d{2}[.\/-]\d{4}$/,time:/^\d{1,2}:\d{2}(:\d{2})?$/,dec:/^[\d.]*\d,\d+$/,short:/^[A-Za-z][A-Za-z0-9]{0,2}$/,word:/^[A-Za-z][A-Za-z0-9_.\-]{1,11}$/};
+  /* Zoekt de kolommen op hun inhoud, voor een export met een andere volgorde. */
+  function detectMap(rows){
+    var w=0;rows.forEach(function(r){if(r.length>w) w=r.length});
+    if(w<2) return null;
+    var tset={};TYPES.forEach(function(t){tset[t[0]]=1});
+    var st=[];
+    for(var i=0;i<w;i++){
+      var c={i:i,t:0,hu:0,d:0,tm:0,dec:0,sum:0,ty:0,word:0,un:0,blank:0,maxlen:0,tech:0,alpha:0,bin:0,bin2:0},seen={};
+      rows.forEach(function(r){
+        var v=(r[i]||'').trim();
+        if(!v){c.blank++;return}
+        c.t++;
+        if(RE.hu.test(v)) c.hu++;
+        if(RE.date.test(v)) c.d++;
+        if(RE.time.test(v)) c.tm++;
+        if(RE.dec.test(v)){c.dec++;c.sum+=parseFloat(v.replace(/\./g,'').replace(',','.'))||0}
+        if(tset[v.toUpperCase()]) c.ty++;
+        if(RE.short.test(v)) c.short++;
+        if(RE.word.test(v)) c.word++;
+        if(RE.bin.test(v)) c.bin++;
+        if(/^[A-Za-z]\d{1,2}$/.test(v)) c.bin2++;
+        if(v.indexOf('_')>=0||v.indexOf('/')>=0) c.tech++;
+        if((v.match(/[A-Za-z]/g)||[]).length>=3) c.alpha++;
+        if(v.length>c.maxlen) c.maxlen=v.length;
+        if(!(v in seen)){seen[v]=1;c.un++}
+      });
+      st.push(c);
+    }
+    function pick(f){var b=null;st.forEach(function(c){var v=f(c);if(v>0&&(!b||v>b.v)) b={c:c,v:v}});return b&&b.c}
+    var used={};
+    function take(c){if(c) used[c.i]=1;return c}
+    var hu=take(pick(function(c){return c.t&&c.hu/c.t>=0.9?c.un:0}));
+    if(!hu) return null;
+    var m={hu:hu.i};
+    var ty=take(pick(function(c){return !used[c.i]&&c.t&&c.ty/c.t>=0.8?c.ty*(c.un>1?100:1):0}));
+    /* Geen enkele code uit de lijst herkend: dan de kolom met korte codes nemen. */
+    if(!ty) ty=take(pick(function(c){return !used[c.i]&&c.t&&c.short/c.t>=0.8&&c.un>=2&&c.maxlen<=3?c.un:0}));
+    if(ty) m.ty=ty.i;
+    /* Storage bin: A1 tot A7, B tot F met een cijfer tot 5; overal dezelfde of enkele. */
+    var dk=take(pick(function(c){return !used[c.i]&&c.t&&c.un<=4&&c.bin/c.t>=0.6?c.bin:0}));
+    if(dk) m.dock=dk.i;
+    /* Changed on + changed at staan naast elkaar: een datum met een uur erachter. */
+    var dt=take(pick(function(c){
+      if(used[c.i]||!c.t||c.d/c.t<0.8) return 0;
+      var a=st[c.i+1],b=st[c.i-1];
+      if(a&&a.t&&a.tm/a.t>=0.8) return c.t;
+      if(b&&b.t&&b.tm/b.t>=0.8) return c.t;
+      return 0;
+    }));
+    if(dt){
+      var nx=st[dt.i+1],pv=st[dt.i-1];
+      m.cd=dt.i;
+      m.ct=(nx&&nx.t&&nx.tm/nx.t>=0.8)?dt.i+1:dt.i-1;
+      used[m.ct]=1;
+    }
+    /* Van de gewichtskolommen is het totaal gewicht de grootste. */
+    var wt=take(pick(function(c){return !used[c.i]&&c.dec&&c.t&&c.dec/c.t>=0.8?c.sum/c.dec:0}));
+    if(wt) m.w=wt.i;
+    /* De user is kort en komt maar in een paar varianten voor. */
+    var us=take(pick(function(c){return !used[c.i]&&c.t>1&&c.word/c.t>=0.9&&c.maxlen<=12&&c.un<=5&&c.bin/c.t<0.6&&c.maxlen>=3?100-c.un:0}));
+    if(us) m.user=us.i;
+    /* De klantnaam is de langste tekst; SAP laat ze leeg bij dezelfde klant. */
+    var cu=take(pick(function(c){return !used[c.i]&&c.t>1&&!c.tech&&c.alpha/c.t>=0.8&&c.un>1&&c.maxlen>=6?c.maxlen:0}));
+    if(cu) m.cu=cu.i;
+    if(m.dock===undefined){
+      var dk2=take(pick(function(c){return !used[c.i]&&c.t&&c.un<=3&&c.bin2/c.t>=0.6?c.bin2:0}));
+      if(dk2) m.dock=dk2.i;
+    }
+    return m;
+  }
+  /* Klopt de vaste indeling wel met wat er in die kolommen staat? */
+  function mapFits(m,data){
+    if(!data.length) return false;
+    var tset={};TYPES.forEach(function(t){tset[t[0]]=1});
+    function share(i,f){
+      if(i===undefined) return 1;
+      var k=0;data.forEach(function(c){if(f((c[i]||'').trim())) k++});
+      return k/data.length;
+    }
+    return share(m.w,function(v){return RE.dec.test(v)})>=0.6
+      && share(m.cd,function(v){return RE.date.test(v)})>=0.6
+      && share(m.ct,function(v){return RE.time.test(v)})>=0.6
+      && share(m.ty,function(v){return !!tset[v.toUpperCase()]||RE.short.test(v)})>=0.6;
+  }
+  function build(m,data){
+    var docks=[],types={},users={},weights={},customers={},changed={},lastCu='';
+    function col(c,i){return i===undefined?'':(c[i]||'').trim()}
+    data.forEach(function(c){
+      var hu=col(c,m.hu);if(!hu) return;
+      var d=col(c,m.dock),t=col(c,m.ty),w=col(c,m.w);
+      if(d&&docks.indexOf(d)<0) docks.push(d);
+      if(t) types[hu]=t;
+      if(col(c,m.user)) users[hu]=col(c,m.user);
+      if(w) weights[hu]=w;
+      /* Changed on + changed at: datum en uur van de laatste wijziging. */
+      if(col(c,m.cd)) changed[hu]={d:col(c,m.cd),t:col(c,m.ct)};
+      /* SAP laat de klantnaam leeg bij opeenvolgende HU's van dezelfde klant: neem de klant erboven. */
+      var cu=col(c,m.cu);
+      if(cu) lastCu=cu;
+      if(lastCu) customers[hu]=lastCu;
+    });
+    return {dock:docks.join(' · '),hus:data.map(function(c){return col(c,m.hu)}).filter(function(x){return x}),
+      types:types,users:users,weights:weights,customers:customers,changed:changed};
+  }
+
+  function parse(text){
+    /* Alleen rechts afkappen: een rij kan met een lege kolom (tab) beginnen. */
+    var lines=text.replace(/\r/g,'').split('\n').map(function(l){return l.replace(/\s+$/,'')}).filter(function(l){return l.trim()!==''});
+    if(!lines.length) return null;
+    /* Opbouw uit de export: kolom 1 = dock, kolom 2 = HU, één HU per rij. */
+    var cols=lines.map(function(l){return l.split('\t').map(function(c){return c.trim()})});
+    /* Kolomkoppen uit SAP (Stor. Bin, Handling Unit, ...) worden overgeslagen. */
+    /* Nieuwe export: type=kol 2, dock=kol 4, user=kol 5, HU=kol 7, total weight=kol 11.
+       Oude export: dock=kol 1, HU=kol 2, type=kol 3, weight=kol 8. */
+    var isNew=function(c){return c.length>=11&&/^\d{8,}$/.test(c[6])};
+    var isOld=function(c){return c.length<11&&c.length>=2&&/^\d{6,}$/.test(c[1])};
+    var nData=cols.filter(isNew),oData=cols.filter(isOld);
+    var map=null,data=null;
+    if(nData.length&&nData.length>=oData.length&&mapFits(MAPNEW,nData)){map=MAPNEW;data=nData}
+    else if(oData.length&&mapFits(MAPOLD,oData)){map=MAPOLD;data=oData}
+    if(!map||data.length<cols.length/2){
+      /* Staan de kolommen elders, dan zoeken we ze op hun inhoud. */
+      var det=detectMap(cols);
+      if(det){map=det;data=cols.filter(function(c){return RE.hu.test((c[det.hu]||'').trim())})}
+    }
+    if(map&&data.length&&data.length>=cols.length/2){
+      /* Staat de storage bin niet op zijn vaste plaats, zoek ze dan alsnog. */
+      var leeg=!data.some(function(c){return (c[map.dock]||'').trim()});
+      if(leeg){
+        var d2=detectMap(cols);
+        if(d2&&d2.dock!==undefined){
+          var m2={};for(var k in map) m2[k]=map[k];
+          m2.dock=d2.dock;map=m2;
+        }
+      }
+      return build(map,data);
+    }
+    /* Terugval: rij 1 = dock, rij 2 = HU's naast elkaar. */
+    var dock=lines[0].split(/\t|;/)[0].trim();
+    var hus=[];
+    lines.slice(1).forEach(function(l){
+      l.split(/[\t;,\s]+/).forEach(function(t){if(t) hus.push(t)});
+    });
+    return {dock:dock,hus:hus,types:{},users:{},weights:{},customers:{},changed:{}};
+  }
+
+  function toNum(s){
+    if(!s) return null;
+    var v=parseFloat(String(s).replace(/\./g,'').replace(',','.'));
+    return isNaN(v)?null:v;
+  }
+  function fmt(v){return v.toLocaleString('nl-BE',{minimumFractionDigits:0,maximumFractionDigits:3})}
+  /* 'type' = per klant op stillage type, 'tijd' = per klant op changed on/changed at. */
+  var sortMode='type';
+  function chgKey(c){
+    if(!c||!c.d) return '';
+    var m=/^(\d{2})[.\/-](\d{2})[.\/-](\d{4})$/.exec(c.d);
+    var d=m?m[3]+m[2]+m[1]:c.d;
+    return d+' '+(c.t||'');
+  }
+  function chgText(c){
+    if(!c||!c.d) return '–';
+    return c.d.slice(0,5)+' '+(c.t||'');
+  }
+
+  function render(text,isSample){
+    var take=7,skip=1;
+    rule.textContent='Regel, enkel op de handling units: van elke HU de 7 cijfers vóór het laatste cijfer.';
+    badge.textContent=isSample?'Voorbeeldgegevens':'Ingelezen';
+    badge.className='pill '+(isSample?'ex':'live');
+    badge.hidden=false;
+    var p=parse(text);
+    LAST=p;
+    codes=[];
+    if(!p){
+      badge.hidden=true;
+      autoDock('');
+      totalEl.textContent='–';
+      s1nEl.textContent='–';
+      s1wEl.textContent='–';
+      n6El.textContent='–';
+      n65El.textContent='–';
+      out.innerHTML='<div class="empty">Nog niets geplakt. Klik in het plakveld en druk op Ctrl + V.</div>';
+      count.textContent='';copyBtn.disabled=true;return;
+    }
+    autoDock(p.dock);
+    /* Een zelf gekozen stillage type gaat voor op dat uit de export. */
+    function effType(hu){var s=state[hu];return (s&&s.t!==undefined)?s.t:(p.types[hu]||'')}
+    var tw=0,anyW=false,s1n=0,s1w=0;
+    p.hus.forEach(function(hu){
+      var w=toNum(p.weights[hu]);
+      if(w!==null){tw+=w;anyW=true}
+      if(effType(hu)==='S1'){s1n++;if(w!==null) s1w+=w}
+    });
+    totalEl.textContent=anyW?fmt(tw)+' kg':'–';
+    s1nEl.textContent=String(s1n);
+    s1wEl.textContent=fmt(s1w)+' kg';
+    if(!p.hus.length){
+      out.innerHTML='<div class="empty">Geen HU\'s gevonden in de geplakte gegevens.</div>';
+      count.textContent='';copyBtn.disabled=true;return;
+    }
+    var bytime=sortMode==='tijd',cs=bytime?6:5;
+    var h='<table><thead><tr><th>#</th><th>Stillage type</th><th>User</th>'+(bytime?'<th>Gewijzigd</th>':'')+'<th class="r">Total weight</th><th>HU\'s</th><th class="c">6m</th><th class="c">6.5m</th></tr></thead><tbody>';
+    /* Groepeer per klant: een TU kan meerdere klanten bevatten. */
+    var groups=[],gi={};
+    p.hus.forEach(function(hu){
+      var k=p.customers[hu]||'';
+      if(!(k in gi)){gi[k]=groups.length;groups.push({name:k,hus:[]})}
+      groups[gi[k]].hus.push(hu);
+    });
+    groups.sort(function(a,b){
+      if(!a.name) return 1;
+      if(!b.name) return -1;
+      return a.name.localeCompare(b.name,'nl',{sensitivity:'base'});
+    });
+    /* Binnen elke klant sorteren op stillage type (B1, S0, S1, S2, S3, S12, W1, ...), daarna op volgorde van de export. */
+    var idx={};
+    p.hus.forEach(function(hu,i){idx[hu]=i});
+    function tkey(hu){
+      var t=effType(hu);if(!t) return null;
+      var m=/^([A-Za-z]*)(\d*)/.exec(t);
+      return [m[1].toUpperCase(),m[2]===''?0:parseInt(m[2],10)];
+    }
+    groups.forEach(function(g){
+      if(bytime){
+        g.hus.sort(function(a,b){
+          var x=chgKey(p.changed[a]),y=chgKey(p.changed[b]);
+          if(x!==y) return x<y?-1:1;
+          return idx[a]-idx[b];
+        });
+        return;
+      }
+      g.hus.sort(function(a,b){
+        var x=tkey(a),y=tkey(b);
+        if(!x&&!y) return idx[a]-idx[b];
+        if(!x) return 1;
+        if(!y) return -1;
+        if(x[0]!==y[0]) return x[0]<y[0]?-1:1;
+        if(x[1]!==y[1]) return x[1]-y[1];
+        return idx[a]-idx[b];
+      });
+    });
+    var n=0;
+    groups.forEach(function(g){
+      var tot=0,hasW=false;
+      g.hus.forEach(function(hu){var w=toNum(p.weights[hu]);if(w!==null){tot+=w;hasW=true}});
+      h+='<tr class="grp" data-n="'+g.hus.length+'" data-naam="'+esc(g.name||'Geen klant')+'"><td colspan="'+cs+'"><b>'+esc(g.name||'Geen klant')+'</b><span class="gc">'+g.hus.length+' HU\'s'+(hasW?' · '+fmt(tot)+' kg':'')+'</span></td><td class="c gcnt"><span class="chip"><i class="n6">0</i></span></td><td class="c gcnt"><span class="chip"><i class="n65">0</i></span></td></tr>';
+      /* S0 (los in een andere stillage) komt onderaan de klant onder een eigen subtitel. */
+      /* Onder elke klant: eerst de stillages e.a., dan Stukgoed (B- en P-types), dan S0. */
+      function tt(hu){return effType(hu)}
+      var isLoose=function(hu){return tt(hu)==='S0'};
+      var isPiece=function(hu){return /^[BP]/i.test(tt(hu))};
+      var main=g.hus.filter(function(hu){return !isLoose(hu)&&!isPiece(hu)});
+      var piece=g.hus.filter(isPiece);
+      var loose=g.hus.filter(isLoose);
+      var seq;
+      if(bytime){
+        /* Op tijdstip: één doorlopende lijst per klant, zonder subgroepen. */
+        seq=g.hus.slice();
+      }else{
+        seq=main.slice();
+        if(piece.length){seq.push({sub:piece.length,title:'Stukgoed'});piece.forEach(function(hu){seq.push(hu)})}
+        if(loose.length){seq.push({sub:loose.length,title:'Loose in another stillage'});loose.forEach(function(hu){seq.push(hu)})}
+      }
+      seq.forEach(function(hu){
+      if(typeof hu==='object'){
+        h+='<tr class="sub"><td colspan="'+(cs+2)+'">'+esc(hu.title)+'<span class="gc">'+hu.sub+' HU\'s</span></td></tr>';
+        return;
+      }
+      n++;
+      var end=hu.length-skip,start=end-take;
+      if(start<0){
+        h+='<tr class="bad"><td class="n">'+n+'</td><td colspan="'+(cs-2)+'">Te kort voor de regel hierboven</td><td class="hu">'+esc(hu)+'</td><td class="c" colspan="2"></td></tr>';
+        return;
+      }
+      var code=hu.slice(start,end),s=state[hu]||{};
+      codes.push(code);
+      h+='<tr data-hu="'+esc(hu)+'"><td class="n">'+n+'</td>'
+        +'<td>'+typeSelect(code,effType(hu),p.types[hu]||'')+'</td>'
+        +'<td class="u" title="'+esc(p.users[hu]||'')+'">'+esc(userName(p.users[hu]))+'</td>'
+        +(bytime?'<td class="chg">'+esc(chgText(p.changed[hu]))+'</td>':'')
+        +'<td class="r">'+(p.weights[hu]?esc(p.weights[hu])+' kg':'–')+'</td>'
+        +'<td class="hu"><span class="code">'+esc(code)+'</span><br><small>'+esc(hu.slice(0,start))+'<mark>'+esc(code)+'</mark>'+esc(hu.slice(end))+'</small></td>'
+        +lastCells(hu,code,s,isPiece(hu)?'piece':(isLoose(hu)?'loose':''))+'</tr>';
+      });
+    });
+    out.innerHTML=h+'</tbody></table>';
+    updateCounts();
+    count.textContent=p.hus.length+' HU\'s';
+    copyBtn.disabled=!codes.length;
+  }
+
+  function save(v){try{localStorage.setItem(KEY,v)}catch(e){}}
+  function load(){try{return localStorage.getItem(KEY)||''}catch(e){return ''}}
+
+  function update(){
+    var v=ta.value;
+    ta.classList.toggle('hot',v.trim()!=='');
+    save(v===SAMPLE?'':v);
+    render(v,v===SAMPLE);
+  }
+
+  out.addEventListener('input',onField);
+  out.addEventListener('change',onField);
+  ta.addEventListener('input',update);
+  ta.addEventListener('paste',function(){setTimeout(update,0)});
+  $('clear').addEventListener('click',function(){resetVelden();clearKop();ta.value='';update();ta.focus()});
+  copyBtn.addEventListener('click',function(){
+    var txt=codes.join('\n');
+    function done(){var o=copyBtn.textContent;copyBtn.textContent='Gekopieerd';setTimeout(function(){copyBtn.textContent=o},1400)}
+    try{navigator.clipboard.writeText(txt).then(done,function(){})}catch(e){}
+  });
+
+  /* Dock en TU kunnen ook zelf ingevuld worden; een eigen invoer blijft staan. */
+  var KOPKEY='dockcontrole-kop',kop={};
+  try{kop=JSON.parse(localStorage.getItem(KOPKEY)||'{}')||{}}catch(e){kop={}}
+  function saveKop(){try{localStorage.setItem(KOPKEY,JSON.stringify(kop))}catch(e){}}
+  function autoDock(v){if(!kop.d) dockEl.value=v||''}
+  /* Dock en TU mee leegmaken met de knop Veld leegmaken. */
+  function clearKop(){
+    kop.d='';kop.t='';kop.x='';kop.xt='';
+    XF.forEach(function(f){kop[f[0]]=''});
+    saveKop();
+    dockEl.value='';$('tu').value='';
+    var x=$('xd');x.value='';x.style.height='';
+    fillXdrow();
+  }
+  function formatTU(s){
+    var v=String(s).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,8);
+    return v.length>2?v.slice(0,2)+'/'+v.slice(2):v;
+  }
+  var tuEl=$('tu');
+  dockEl.value=kop.d||'';
+  tuEl.value=kop.t||'';
+  dockEl.addEventListener('input',function(){kop.d=dockEl.value.trim();saveKop()});
+  /* Crossdock: stillage type, lengtes en paletten, naast het vrije tekstvak. */
+  var XF=[['x6','6m'],['x65','6.5m'],['xpe','Europalet 80×120'],['xpb','Blokpalet 120×120'],['xpg','Gasket 80×80'],['xpd','Dozen']];
+  var xdrow=$('xdrow');
+  function fillXdrow(){
+    var oh='<label><span class="pd">Stillage type</span>'+typeSelect('crossdock',kop.xt||'')+'</label>';
+    XF.forEach(function(f){
+      oh+='<label><span class="pd">'+f[1]+'</span><input class="pin" type="number" min="0" step="1" inputmode="numeric" id="'+f[0]+'" aria-label="Crossdock '+f[1]+'" value="'+esc(kop[f[0]]===undefined?'':kop[f[0]])+'"></label>';
+    });
+    xdrow.innerHTML=oh;
+  }
+  fillXdrow();
+  function onXd(e){
+    if(e.target.classList.contains('st')) kop.xt=e.target.value;
+    else if(e.target.id) kop[e.target.id]=e.target.value;
+    saveKop();
+  }
+  xdrow.addEventListener('input',onXd);
+  xdrow.addEventListener('change',onXd);
+  /* Crossdock: vrij tekstvak dat mee op de afdruk komt en groeit met de tekst. */
+  var xdEl=$('xd');
+  function growXd(){xdEl.style.height='auto';xdEl.style.height=Math.max(96,xdEl.scrollHeight)+'px'}
+  xdEl.value=kop.x||'';
+  growXd();
+  xdEl.addEventListener('input',function(){kop.x=xdEl.value;saveKop();growXd()});
+  tuEl.addEventListener('input',function(){tuEl.value=formatTU(tuEl.value);kop.t=tuEl.value;saveKop()});
+
+  /* PDF: alles op 1 A4-pagina (schaalt automatisch kleiner bij veel HU's) */
+  var root=document.documentElement,wrapEl=document.querySelector('.wrap');
+  function fitPrint(){
+    root.classList.add('printing');
+    root.style.removeProperty('--ps');root.style.removeProperty('--pw');
+    var pageH=(297-16)/25.4*96-2, pageW=(210-16)/25.4*96;
+    var h=wrapEl.offsetHeight,w=wrapEl.offsetWidth;
+    /* Past het niet op 1 blad, dan mag het over 2 bladzijden (recto verso). */
+    var sc=Math.min(1,pageW/w,pageH/h);
+    if(sc*h>pageH-1) sc=Math.min(1,pageW/w,2*pageH/h);
+    /* Marge voor rijen die niet over de paginarand mogen breken. */
+    sc=Math.floor(sc*(sc*h>pageH?94:98))/100;
+    root.style.setProperty('--ps',sc);
+    root.style.setProperty('--pw',Math.floor(pageW/sc)+'px');
+  }
+  function endPrint(){root.classList.remove('printing');root.style.removeProperty('--ps');root.style.removeProperty('--pw')}
+  window.addEventListener('beforeprint',fitPrint);
+  window.addEventListener('afterprint',endPrint);
+  $('pdftime').addEventListener('click',function(){printAs('tijd')});
+  /* Onderaan: enkel de samenvatting per klant. */
+  function buildSum(){
+    var d=dockEl.value.trim(),t=tuEl.value.trim();
+    $('sumkop').innerHTML='<span><span class="k">Dock</span> <b>'+esc(d||'–')+'</b></span>'
+      +'<span><span class="k">TU</span> <b>'+esc(t||'–')+'</b></span>';
+    var h='<table><thead><tr><th>Klant</th><th class="num">HU\'s</th><th class="num">6m</th><th class="num">6.5m</th></tr></thead><tbody>';
+    SUM.rij.forEach(function(r){
+      h+='<tr><td class="kl">'+esc(r.naam)+'</td><td class="num">'+r.n+'</td><td class="num">'+r.a+'</td><td class="num">'+r.b+'</td></tr>';
+    });
+    /* Crossdock telt mee zodra er iets is ingevuld. */
+    function xn(k){var v=parseInt(kop[k],10);return isNaN(v)||v<0?0:v}
+    var xa=xn('x6'),xb=xn('x65'),xp={pe:xn('xpe'),pb:xn('xpb'),pg:xn('xpg'),pd:xn('xpd')};
+    var xTot=xa+xb,xPal=xp.pe+xp.pb+xp.pg+xp.pd;
+    if(xTot||xPal||(kop.xt||'')){
+      h+='<tr class="xd"><td class="kl">Crossdock'+(kop.xt?'<small>'+esc(kop.xt)+'</small>':'')+'</td><td class="num">'+xTot+'</td><td class="num">'+xa+'</td><td class="num">'+xb+'</td></tr>';
+    }
+    h+='<tr class="tot"><td class="kl">Totaal</td><td class="num">'+(SUM.hus+xTot)+'</td><td class="num">'+(SUM.a+xa)+'</td><td class="num">'+(SUM.b+xb)+'</td></tr>';
+    $('sumtab').innerHTML=h+'</tbody></table>';
+    var q=SUM.pal,p={pe:q.pe+xp.pe,pb:q.pb+xp.pb,pg:q.pg+xp.pg,pd:q.pd+xp.pd};
+    $('sumpal').innerHTML='<div class="sum"><span class="k">Europalet 80×120</span><span class="v3">'+p.pe+'</span></div>'
+      +'<div class="sum"><span class="k">Blokpalet 120×120</span><span class="v3">'+p.pb+'</span></div>'
+      +'<div class="sum"><span class="k">Gasket 80×80</span><span class="v3">'+p.pg+'</span></div>'
+      +'<div class="sum"><span class="k">Dozen</span><span class="v3">'+p.pd+'</span></div>'
+      +'<div class="sum end"><span class="k">Totaal paletten</span><span class="v3">'+(p.pe+p.pb+p.pg)+'</span></div>';
+  }
+  $('pdfbot').addEventListener('click',function(){
+    buildSum();
+    root.classList.add('onlysum');
+    window.print();
+  });
+  window.addEventListener('afterprint',function(){root.classList.remove('onlysum')});
+  /* Na het afdrukken keert de pagina terug naar de gewone volgorde. */
+  var printPrev=null;
+  function printAs(mode){
+    if(mode!==sortMode){printPrev=sortMode;sortMode=mode;render(ta.value,false)}
+    window.print();
+  }
+  window.addEventListener('afterprint',function(){
+    if(printPrev===null) return;
+    sortMode=printPrev;printPrev=null;render(ta.value,false);
+  });
+
+  /* ---------- work-sap: de TU klaarzetten voor de controlepagina ---------- */
+  var dbstate=$('dbstate'),lgForm=$('lgForm'),lgOk=$('lgOk'),lgErr=$('lgErr'),sbinfo=$('sbinfo');
+  function dbToon(){
+    var se=sbRead();
+    dbstate.className='dbstate'+(se?' on':'');
+    dbstate.lastElementChild.textContent=se?'ingelogd':'niet ingelogd';
+    lgForm.hidden=!!se;lgOk.hidden=!se;
+    if(se) $('lgWho').textContent=se.email||'';
+  }
+  function fout(el,t){el.textContent=t||'';el.hidden=!t}
+  function info(t,soort){sbinfo.textContent=t||'';sbinfo.className='sbinfo'+(soort?' '+soort:'')}
+  dbToon();
+  $('lgBtn').addEventListener('click',async function(){
+    fout(lgErr,'');
+    try{
+      await sbLogin($('lgMail').value,$('lgPw').value);
+      $('lgPw').value='';dbToon();info('Ingelogd.','ok');
+    }catch(e){fout(lgErr,e.message||'inloggen mislukt')}
+  });
+  $('lgPw').addEventListener('keydown',function(e){if(e.key==='Enter')$('lgBtn').click()});
+  $('lgOut').addEventListener('click',async function(){await sbLogout();dbToon();info('Uitgelogd.')});
+
+  /* Eén record per HU: de gegevens uit de export plus wat hier is aangeduid. */
+  function huLijst(){
+    if(!LAST||!LAST.hus.length) return [];
+    var start,end;
+    return LAST.hus.map(function(hu){
+      var s=state[hu]||{},c=LAST.changed[hu]||{},t=hu.length>8?hu.slice(-8,-1):hu;
+      return {
+        hu:hu,code:t,
+        type:(s.t!==undefined?s.t:(LAST.types[hu]||'')),
+        type_export:LAST.types[hu]||'',
+        user:LAST.users[hu]||'',
+        gewicht:LAST.weights[hu]||'',
+        klant:LAST.customers[hu]||'',
+        gew_datum:c.d||'',gew_uur:c.t||'',
+        a:s.a?1:0,b:s.b?1:0,
+        pe:s.pe||'',pb:s.pb||'',pg:s.pg||'',pd:s.pd||''
+      };
+    });
+  }
+  function xdLijst(){
+    return {t:kop.xt||'',a:kop.x6||'',b:kop.x65||'',pe:kop.xpe||'',pb:kop.xpb||'',pg:kop.xpg||'',pd:kop.xpd||'',tekst:kop.x||''};
+  }
+  function tuNu(){return tuEl.value.trim()}
+  function stand(r){
+    if(!r) return '';
+    var d=r.gecontroleerd_op?new Date(r.gecontroleerd_op):null;
+    var w={open:'klaargezet',bezig:'controle bezig',klaar:'gecontroleerd'}[r.status]||r.status;
+    return w+(d?' op '+d.toLocaleString('nl-BE',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}):'')
+      +(r.gecontroleerd_door?' door '+r.gecontroleerd_door:'');
+  }
+  $('sbsend').addEventListener('click',async function(){
+    var tu=tuNu();
+    if(!tu){info('Vul eerst de TU in.','err');tuEl.focus();return}
+    var lijst=huLijst();
+    if(!lijst.length){info('Er staan nog geen HU\'s in de lijst.','err');return}
+    info('Versturen…');
+    try{
+      await sbRest('dock_routes',{method:'POST',
+        headers:{Prefer:'resolution=merge-duplicates,return=minimal'},
+        body:[{tu:tu,dock:dockEl.value.trim()||null,status:'open',hus:lijst,crossdock:xdLijst(),
+               klaargezet_op:new Date().toISOString(),gecontroleerd_op:null,gecontroleerd_door:null}]});
+      info('TU '+tu+' staat klaar voor de controle ('+lijst.length+' HU\'s).','ok');
+    }catch(e){
+      info(e.status===401?'Log eerst in bij 0. Database.':(e.message||'versturen mislukt'),'err');
+    }
+  });
+  $('sbget').addEventListener('click',async function(){
+    var tu=tuNu();
+    if(!tu){info('Vul eerst de TU in.','err');tuEl.focus();return}
+    info('Ophalen…');
+    try{
+      var r=await sbRest('dock_routes?tu=eq.'+encodeURIComponent(tu)+'&select=*');
+      r=r&&r[0];
+      if(!r){info('TU '+tu+' staat niet in de database.','err');return}
+      (r.hus||[]).forEach(function(x){
+        if(!x||!x.hu) return;
+        var s=state[x.hu]||(state[x.hu]={});
+        s.a=!!x.a;s.b=!!x.b;
+        ['pe','pb','pg','pd'].forEach(function(k){if(x[k]) s[k]=x[k]; else delete s[k]});
+        if(x.type!==undefined&&x.type!==x.type_export) s.t=x.type; else delete s.t;
+      });
+      var c=r.crossdock||{};
+      kop.xt=c.t||'';kop.x6=c.a||'';kop.x65=c.b||'';
+      kop.xpe=c.pe||'';kop.xpb=c.pb||'';kop.xpg=c.pg||'';kop.xpd=c.pd||'';
+      kop.x=c.tekst||'';
+      if(r.dock){kop.d=r.dock;dockEl.value=r.dock}
+      saveKop();saveState();
+      fillXdrow();
+      var x=$('xd');x.value=kop.x;x.style.height='';growXd();
+      update();
+      info('Opgehaald — '+stand(r)+'.','ok');
+    }catch(e){
+      info(e.status===401?'Log eerst in bij 0. Database.':(e.message||'ophalen mislukt'),'err');
+    }
+  });
+
+  ta.value=load();
+  update();
+})();
+</script>
+</body>
+</html>

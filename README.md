@@ -9,4 +9,6 @@ Pagina om de klaargezette routes aan het dok af te vinken. Eén bestand, `index.
 - **Controle afgerond** waarschuwt als er nog HU's zonder keuze zijn, zet de route op afgewerkt (met tijdstip en e-mailadres) en maakt daarna de velden leeg.
 - De kolom `volledig_gekeurd` in `dock_routes` wordt `true` zodra elke HU een keuze heeft (6m, 6.5m, ?, gezien of paletten/dozen).
 
+- `pc.html` is de pc-versie (Dockcontrole_PC): plak de SAP-export, kies per HU het stillage type en stuur de TU met **Naar controle sturen** naar `dock_routes`. `index.html` handelt die routes daarna af aan het dok.
+
 Zet GitHub Pages aan op de branch `main`, map `/ (root)`.
