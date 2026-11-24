@@ -70,7 +70,7 @@ html.printing .panel{gap:8px}
 html.printing .wrap{gap:10px}
 html.printing h1{font-size:1.8rem}
 html.printing .logo{height:40px}
-html.printing body{padding:0;background:#fff}
+html.printing body{padding:0;background:#fff!important}
 /* Max 2 bladzijden, recto verso: nette paginaovergang. */
 html.printing thead{display:table-header-group}
 html.printing tr{break-inside:avoid;page-break-inside:avoid}
@@ -85,11 +85,16 @@ html.printing .wrap{width:var(--pw,730px);max-width:none;margin:0;zoom:var(--ps,
     --mark:#ffe08a;--mark-ink:#3a2a00;color-scheme:light;
   }
   *{-webkit-print-color-adjust:exact;print-color-adjust:exact}
-  body{padding:0;background:#fff;overflow:hidden}
+  body{padding:0;background:#fff!important;overflow:hidden}
 }
 .pdfbar{display:flex;justify-content:flex-end;gap:10px;flex-wrap:wrap}
 body{
-  background:var(--bg);color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;
+  background:hsla(247, 100%, 52%, 1);
+  background:linear-gradient(180deg, hsla(247, 100%, 52%, 1) 0%, hsla(250, 76%, 57%, 1) 27%, hsla(277, 67%, 77%, 1) 61%, hsla(218, 88%, 59%, 1) 100%);
+  background:-moz-linear-gradient(180deg, hsla(247, 100%, 52%, 1) 0%, hsla(250, 76%, 57%, 1) 27%, hsla(277, 67%, 77%, 1) 61%, hsla(218, 88%, 59%, 1) 100%);
+  background:-webkit-linear-gradient(180deg, hsla(247, 100%, 52%, 1) 0%, hsla(250, 76%, 57%, 1) 27%, hsla(277, 67%, 77%, 1) 61%, hsla(218, 88%, 59%, 1) 100%);
+  background-attachment:fixed;min-height:100vh;
+  color:var(--ink);font-family:var(--font-body);font-size:15px;line-height:1.5;
   padding-block:24px 48px;
   padding-left:max(16px,env(safe-area-inset-left,0px));
   padding-right:max(16px,env(safe-area-inset-right,0px));
